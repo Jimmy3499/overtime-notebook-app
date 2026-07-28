@@ -36,10 +36,10 @@ function RootStack() {
         name="Main"
         component={MainTabs}
         options={{
-          title: '加班小账本',
-          headerStyle: { backgroundColor: THEME.primary },
+          title: '加班本',
+          headerStyle: { backgroundColor: THEME.primary, height: 40 },
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: '600' },
+          headerTitleStyle: { fontWeight: '600', fontSize: 16 },
         }}
       />
       <Stack.Screen
@@ -47,9 +47,9 @@ function RootStack() {
         component={AddRecordScreen}
         options={({ route }: any) => ({
           title: route.params?.record ? '编辑记录' : '添加记录',
-          headerStyle: { backgroundColor: THEME.primary },
+          headerStyle: { backgroundColor: THEME.primary, height: 40 },
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: '600' },
+          headerTitleStyle: { fontWeight: '600', fontSize: 16 },
         })}
       />
       <Stack.Screen
@@ -57,9 +57,9 @@ function RootStack() {
         component={HolidaysScreen}
         options={{
           title: '节假日配置',
-          headerStyle: { backgroundColor: THEME.primary },
+          headerStyle: { backgroundColor: THEME.primary, height: 40 },
           headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: '600' },
+          headerTitleStyle: { fontWeight: '600', fontSize: 16 },
         }}
       />
     </Stack.Navigator>

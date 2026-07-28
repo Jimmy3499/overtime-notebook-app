@@ -43,7 +43,7 @@ export const RECORD_TYPE_INFO: Record<
 export const RECORD_TYPES: RecordType[] = ['overtime', 'leave', 'late'];
 
 // 当前版本号（设置页展示，便于核对下载的是哪个版本）
-export const APP_VERSION = '2.0.0';
+export const APP_VERSION = '2.0.1';
 
 // 默认设置
 export const DEFAULT_SETTINGS: Settings = {
@@ -57,7 +57,7 @@ export const DEFAULT_SETTINGS: Settings = {
   weekdayRestMinutes: 0,
   weekendRestMinutes: 0,
   monthlySalary: 8000,
-  workDaysPerMonth: 22,
+  workDaysPerMonth: 21.75,
   workHoursPerDay: 8,
   useMonthlySalary: false,
   salaryMultiplierWeekday: 1.5,
