@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>记加班 App - 扫码预览</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    text-align: center;
+  }
+  .title {
+    color: #1f2937;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    color: #6b7280;
+    font-size: 15px;
+    margin-bottom: 32px;
+  }
+  .qr-wrap {
+    display: inline-block;
+    padding: 20px;
+    background: #f9fafb;
+    border-radius: 16px;
+    margin-bottom: 24px;
+  }
+  .qr-wrap img {
+    display: block;
+    width: 280px;
+    height: 280px;
+  }
+  .url-box {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 20px 0;
+    word-break: break-all;
+    font-family: "SF Mono", Monaco, monospace;
+    font-size: 13px;
+    color: #374151;
+  }
+  .steps {
+    text-align: left;
+    background: #eff6ff;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-top: 20px;
+  }
+  .steps h3 {
+    color: #1e40af;
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+  .steps ol {
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.8;
+    padding-left: 20px;
+  }
+  .steps li { margin-bottom: 6px; }
+  .badge {
+    display: inline-block;
+    background: #3b82f6;
+    color: #fff;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">React Native · Expo</span>
+    <h1 class="title">记加班 App</h1>
+    <p class="subtitle">用安卓手机的相机或 Expo Go 扫描下方二维码即可预览</p>
+
+    <div class="qr-wrap">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=exp%3A%2F%2Fveylftk-anonymous-8081.exp.direct%3A80&bgcolor=ffffff&color=000000" alt="二维码" />
+    </div>
+
+    <div class="url-box">
+      exp://veylftk-anonymous-8081.exp.direct:80
+    </div>
+
+    <div class="steps">
+      <h3>扫码步骤</h3>
+      <ol>
+        <li>在安卓手机应用商店搜索并安装 <b>Expo Go</b></li>
+        <li>打开 Expo Go，点击首页的 <b>"Scan QR code"</b></li>
+        <li>用 Expo Go 扫描上方的二维码</li>
+        <li>App 会自动加载，几秒后即可使用</li>
+      </ol>
+    </div>
+  </div>
+</body>
+</html>
