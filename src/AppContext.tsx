@@ -7,7 +7,7 @@ import {
   calcLateDurationHours, calcLateDeduction, calcEndTimeFromDuration,
   defaultSettings, detectOvertimeType, todayStr,
 } from './utils';
-import { fetchHolidaysForYears, mergeHolidays, defaultSyncYears } from './holidaySync';
+import { fetchHolidaysForYears, mergeHolidays, defaultSyncYears, FALLBACK_HOLIDAYS } from './holidaySync';
 
 // 动作类型
 type Action =
@@ -255,7 +255,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         payload: {
           records: migrateRecords(records || []),
           settings: migrateSettings(settings || {}),
-          holidays: holidays || [],
+          // 若本地无节假日数据，则用内置兜底（官方安排），保证离线也能识别
+          holidays: holidays && holidays.length ? holidays : FALLBACK_HOLIDAYS,
           compOff: compOff || { totalHours: 0, usedHours: 0, records: [] },
           markedDates: markedDates || [],
         },

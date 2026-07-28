@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useApp } from '../AppContext';
-import { DEFAULT_SETTINGS, OVERTIME_TYPE_INFO, THEME } from '../constants';
+import { DEFAULT_SETTINGS, OVERTIME_TYPE_INFO, THEME, APP_VERSION } from '../constants';
 import { calcHourlyWageFromSalary, formatMoney } from '../utils';
 import { exportRecordsAsCSV, exportLedger, exportBackup, importBackup, buildLedgerText } from '../export';
 import type { Settings } from '../types';
@@ -420,6 +420,11 @@ export default function SettingsScreen() {
         <TouchableOpacity style={[styles.btn, styles.btnSecondary]} onPress={handleReset}>
           <Text style={[styles.btnText, styles.btnSecondaryText]}>恢复默认</Text>
         </TouchableOpacity>
+      </View>
+      <View style={{ alignItems: 'center', paddingVertical: 18 }}>
+        <Text style={{ fontSize: 12, color: THEME.textMute }}>
+          加班记事本 v{APP_VERSION}
+        </Text>
       </View>
     </ScrollView>
   );

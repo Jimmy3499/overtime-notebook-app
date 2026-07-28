@@ -103,3 +103,53 @@ export function mergeHolidays(
   const merged = [...map.values()].sort((a, b) => (a.date < b.date ? -1 : 1));
   return { merged, added, updated, kept: merged.length - added - updated };
 }
+
+// ========== 内置兜底节假日 ==========
+// 说明：timor.tech 接口现已被 Cloudflare 拦截，App 内联网同步大概率失败。
+// 因此以内置的国务院官方安排作为基准数据，保证离线也能正确识别节假日 / 调休补班。
+// 每年初更新一次即可（覆盖当年及前一年）。
+
+// 生成 [start, end] 闭区间内的所有 YYYY-MM-DD
+function daterange(start: string, end: string): string[] {
+  const out: string[] = [];
+  const s = new Date(start + 'T00:00:00');
+  const e = new Date(end + 'T00:00:00');
+  for (let cur = new Date(s); cur <= e; cur.setDate(cur.getDate() + 1)) {
+    const y = cur.getFullYear();
+    const m = String(cur.getMonth() + 1).padStart(2, '0');
+    const d = String(cur.getDate()).padStart(2, '0');
+    out.push(`${y}-${m}-${d}`);
+  }
+  return out;
+}
+
+function buildFallback(): HolidayConfig[] {
+  const list: HolidayConfig[] = [];
+  const add = (dates: string[], name: string, type: HolidayConfig['type']) => {
+    dates.forEach((date) => list.push({ date, name, type }));
+  };
+
+  // —— 2025（国务院国办发明电〔2024〕12号）——
+  add(daterange('2025-01-01', '2025-01-01'), '元旦', 'holiday');
+  add(daterange('2025-01-28', '2025-02-04'), '春节', 'holiday');
+  add(daterange('2025-04-04', '2025-04-06'), '清明节', 'holiday');
+  add(daterange('2025-05-01', '2025-05-05'), '劳动节', 'holiday');
+  add(daterange('2025-05-31', '2025-06-02'), '端午节', 'holiday');
+  add(daterange('2025-10-01', '2025-10-08'), '国庆节·中秋节', 'holiday');
+  add(['2025-01-26', '2025-02-08', '2025-04-27', '2025-09-28', '2025-10-11'], '调休补班', 'makeup');
+
+  // —— 2026（国务院国办发明电〔2025〕7号）——
+  add(daterange('2026-01-01', '2026-01-03'), '元旦', 'holiday');
+  add(daterange('2026-02-15', '2026-02-23'), '春节', 'holiday');
+  add(daterange('2026-04-04', '2026-04-06'), '清明节', 'holiday');
+  add(daterange('2026-05-01', '2026-05-05'), '劳动节', 'holiday');
+  add(daterange('2026-06-19', '2026-06-21'), '端午节', 'holiday');
+  add(daterange('2026-09-25', '2026-09-27'), '中秋节', 'holiday');
+  add(daterange('2026-10-01', '2026-10-07'), '国庆节', 'holiday');
+  add(['2026-01-04', '2026-02-14', '2026-02-28', '2026-05-09', '2026-09-20', '2026-10-10'], '调休补班', 'makeup');
+
+  return list;
+}
+
+// 内置兜底数据（离线/接口不可达时使用）
+export const FALLBACK_HOLIDAYS: HolidayConfig[] = buildFallback();

@@ -42,6 +42,9 @@ export const RECORD_TYPE_INFO: Record<
 
 export const RECORD_TYPES: RecordType[] = ['overtime', 'leave', 'late'];
 
+// 当前版本号（设置页展示，便于核对下载的是哪个版本）
+export const APP_VERSION = '2.0.0';
+
 // 默认设置
 export const DEFAULT_SETTINGS: Settings = {
   hourlyWageWeekday: 25,
