@@ -3,6 +3,14 @@ set -e
 
 cd "$(dirname "$0")"
 
+# 自动探测 Android SDK 位置（沙箱/CI 可能未设置 ANDROID_HOME）
+if [ -z "$ANDROID_HOME" ]; then
+  for d in /root/android-sdk "$HOME/Android/Sdk" /opt/android-sdk /usr/lib/android-sdk; do
+    if [ -d "$d" ]; then export ANDROID_HOME="$d"; break; fi
+  done
+fi
+echo "ANDROID_HOME=${ANDROID_HOME:-（未设置）}"
+
 # release（默认）或 debug
 BUILD_TYPE="${1:-release}"
 
