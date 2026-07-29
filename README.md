@@ -4,7 +4,7 @@
 
 ## 文件说明
 
-- **APK 安装包**：不在仓库内（原生目录 `/android` 已 gitignore），请到 [GitHub Releases](https://github.com/Jimmy3499/overtime-notebook-app/releases) 下载 `app-release.apk`（arm64-v8a，v3.0.0 正式签名版）
+- **APK 安装包**：不在仓库内（原生目录 `/android` 已 gitignore），请到 [GitHub Releases](https://github.com/Jimmy3499/overtime-notebook-app/releases) 下载 `app-release.apk`（**arm64-v8a 单架构**，v3.0.0 正式签名版，覆盖 2015 年后的主流安卓手机）
 - `src/` - 源代码目录（TypeScript + React Native）
 - `assets/` - 图标、启动图等资源
 - `App.tsx` - 应用入口
@@ -30,7 +30,7 @@
 
 ## 安装 APK
 
-推荐从 [GitHub Releases](https://github.com/Jimmy3499/overtime-notebook-app/releases) 下载最新的 `app-release.apk`（v3.0.0 正式签名版），再按以下步骤安装：
+推荐从 [GitHub Releases](https://github.com/Jimmy3499/overtime-notebook-app/releases) 下载最新的 `app-release.apk`（**arm64-v8a 单架构**的 v3.0.0 正式签名版），再按以下步骤安装：
 
 1. 把 APK 传到安卓手机（浏览器直接下载、或用数据线 / U 盘 / 聊天工具传过去均可）。
 2. 在手机上点击 APK 文件开始安装。
