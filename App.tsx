@@ -12,6 +12,7 @@ import StatsScreen from './src/screens/StatsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import CompOffScreen from './src/screens/CompOffScreen';
 import HolidaysScreen from './src/screens/HolidaysScreen';
+import AgreementScreen from './src/screens/AgreementScreen';
 import SwipeableTabs from './src/components/SwipeableTabs';
 import AppHeader from './src/components/AppHeader';
 import { THEME } from './src/constants';
@@ -58,6 +59,18 @@ function RootStack() {
         options={{
           header: () => <AppHeader title="节假日配置" showBack />,
         }}
+      />
+      <Stack.Screen
+        name="Agreement"
+        component={AgreementScreen}
+        options={({ route }: any) => ({
+          header: () => (
+            <AppHeader
+              title={route.params?.type === 'privacy' ? '隐私政策' : '使用协议'}
+              showBack
+            />
+          ),
+        })}
       />
     </Stack.Navigator>
   );

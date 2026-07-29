@@ -406,6 +406,25 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* 协议与政策 */}
+      <Text style={styles.sectionTitle}>协议与政策</Text>
+      <View style={styles.card}>
+        <TouchableOpacity
+          style={styles.row}
+          onPress={() => navigation.navigate('Agreement', { type: 'terms' })}
+        >
+          <Text style={styles.label}>📜 使用协议</Text>
+          <Text style={styles.chevron}>›</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.row, { borderBottomWidth: 0 }]}
+          onPress={() => navigation.navigate('Agreement', { type: 'privacy' })}
+        >
+          <Text style={styles.label}>🔒 隐私政策</Text>
+          <Text style={styles.chevron}>›</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* 操作按钮 */}
       <View style={styles.actions}>
         <TouchableOpacity
