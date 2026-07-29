@@ -36,6 +36,19 @@ if ! grep -q "debuggableVariants" android/app/build.gradle; then
   echo "已注入 debuggableVariants = []"
 fi
 
+echo "[2.7/6] 限制原生库仅为 arm64-v8a（减小包体，覆盖 2015 年后的安卓手机）..."
+python3 - <<'PY'
+p = "android/app/build.gradle"
+s = open(p).read()
+if 'abiFilters' not in s:
+    s = s.replace('    defaultConfig {\n',
+                  '    defaultConfig {\n        ndk {\n            abiFilters "arm64-v8a"\n        }\n', 1)
+    print("已注入 ndk.abiFilters arm64-v8a")
+else:
+    print("已存在 abiFilters，跳过")
+open(p, "w").write(s)
+PY
+
 echo "[2.6/6] 确保 splash 纯色 logo 存在（expo-splash-screen 主题会引用 @drawable/splashscreen_logo）..."
 SPLASH_LOGO=android/app/src/main/res/drawable/splashscreen_logo.png
 if [ ! -f "$SPLASH_LOGO" ]; then
