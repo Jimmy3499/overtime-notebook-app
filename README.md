@@ -1,17 +1,19 @@
 # 加班小账本 - 完整项目
 
-安卓端记加班 APP，本地存储，离线可用。
+安卓端记加班 APP，本地存储，离线可用。当前版本 **v3.0.0**（正式签名发布版）。
 
 ## 文件说明
 
-- **APK 安装包**：不在仓库内，请到 [GitHub Releases](https://github.com/Jimmy3499/overtime-notebook/releases) 下载 `overtime-notebook-debug.apk`（arm64-v8a，debug 包）
+- **APK 安装包**：不在仓库内（原生目录 `/android` 已 gitignore），请到 [GitHub Releases](https://github.com/Jimmy3499/overtime-notebook-app/releases) 下载 `app-release.apk`（arm64-v8a，v3.0.0 正式签名版）
 - `src/` - 源代码目录（TypeScript + React Native）
 - `assets/` - 图标、启动图等资源
 - `App.tsx` - 应用入口
-- `app.json` - Expo 配置（APP名称、图标、包名等）
+- `app.json` - Expo 配置（APP名称、图标、包名、版本号等）
 - `package.json` - 依赖配置
 - `tsconfig.json` - TypeScript 配置
-- `build-android.sh` - APK 构建脚本
+- `build-android.sh` - APK 一键构建脚本（支持 release / debug）
+- `使用协议.md` / `隐私政策.md` - 应用内内置协议正文（可在「设置 → 协议与政策」离线阅读）
+- `LICENSE` - MIT 开源许可
 
 ## 功能
 
@@ -23,10 +25,12 @@
 - 数据导出 CSV
 - 本地存储（AsyncStorage），无需联网
 - 节假日自动同步：从 [timor.tech](https://timor.tech) 拉取近三年法定节假日与调休补班（首次启动自动静默同步，也可在「设置 → 节假日与调休补班」页手动同步；手动添加的节假日不会被官方数据覆盖）
+- 纯色启动页、自定义矮导航栏
+- 内置《使用协议》与《隐私政策》，可离线阅读
 
 ## 安装 APK
 
-推荐从 [GitHub Releases](https://github.com/Jimmy3499/overtime-notebook/releases) 下载最新的 `overtime-notebook-debug.apk`，再按以下步骤安装：
+推荐从 [GitHub Releases](https://github.com/Jimmy3499/overtime-notebook-app/releases) 下载最新的 `app-release.apk`（v3.0.0 正式签名版），再按以下步骤安装：
 
 1. 把 APK 传到安卓手机（浏览器直接下载、或用数据线 / U 盘 / 聊天工具传过去均可）。
 2. 在手机上点击 APK 文件开始安装。
@@ -38,20 +42,22 @@
 > 下载 / 安装时的常见提示：
 > - 浏览器（如 Chrome）下载 APK 可能弹出"此文件类型可能有害"或"无法下载"——这是安卓对未知来源安装包的常规拦截，**点"继续 / 仍要下载"即可**，不是链接或文件损坏。
 > - 若安装被拦截，检查上述"未知来源"权限是否已为当前使用的浏览器 / 文件管理器开启。
-> - debug 包未经 Play Store 签名，属正常现象，不影响使用。
+> - 本版本为正式签名发布版（使用自有 keystore 签名），可正常安装使用。
 >
 > 首次启动说明：应用启动后会联网从 timor.tech 自动同步近三年节假日（失败不影响使用）；如需立即更新，进入「设置 → 节假日与调休补班」点"同步"。
 
 ## 重新构建 APK
 
+仓库自带 `build-android.sh`，可一键构建（会自动执行 `expo prebuild` 并注入签名配置）：
+
 ```bash
-cd overtime-app
-npm install
-npx expo prebuild --platform android
-cd android
-./gradlew assembleDebug
-# 产物: android/app/build/outputs/apk/debug/app-debug.apk
+bash build-android.sh release   # 构建签名 release 包（默认），产物: android/app/build/outputs/apk/release/app-release.apk
+bash build-android.sh debug     # 构建 debug 包，产物: android/app/build/outputs/apk/debug/app-debug.apk
 ```
+
+> 说明：
+> - release 构建需要签名密钥库。脚本默认在仓库根目录生成 `release-key.keystore`（已被 `.gitignore` 忽略，不会提交）；如需用自己的密钥，请修改脚本中的 `keytool` 参数与 `android/app/keystore.properties`。
+> - `/android` 为预生成目录，已被 gitignore，无需提交；`expo prebuild` 会按需重新生成。
 
 ## 技术栈
 
@@ -59,3 +65,4 @@ cd android
 - TypeScript
 - React Navigation
 - AsyncStorage
+- MIT License（Copyright © 2026 Jimmy3499）
