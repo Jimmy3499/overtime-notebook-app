@@ -13,7 +13,7 @@
 - `tsconfig.json` - TypeScript 配置
 - `build-android.sh` - APK 一键构建脚本（支持 release / debug）
 - `使用协议.md` / `隐私政策.md` - 应用内内置协议正文（可在「设置 → 协议与政策」离线阅读）
-- `LICENSE` - MIT 开源许可
+- `LICENSE` - CC BY-NC 4.0 许可（仅供学习交流，禁止商业用途）
 
 ## 功能
 
@@ -67,4 +67,4 @@ bash build-android.sh debug     # 构建 debug 包，产物: android/app/build/o
 - TypeScript
 - React Navigation
 - AsyncStorage
-- MIT License（Copyright © 2026 Jimmy3499）
+- CC BY-NC 4.0 License（Copyright © 2026 Jimmy3499，仅供学习交流，禁止商业用途）
