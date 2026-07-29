@@ -362,17 +362,19 @@ export default function AddRecordScreen() {
             />
           </View>
 
-          <View style={styles.quickDurRow}>
-            {[0.5, 1, 2, 3, 4].map(h => (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickDurRow}>
+            {Array.from({ length: 48 }, (_, i) => (i + 1) * 0.5).map(h => (
               <TouchableOpacity
                 key={h}
-                style={styles.quickDurBtn}
+                style={[styles.quickDurBtn, parseFloat(durationHours) === h && styles.quickDurBtnActive]}
                 onPress={() => onDurationChange(String(h))}
               >
-                <Text style={styles.quickDurText}>{h}小时</Text>
+                <Text style={[styles.quickDurText, parseFloat(durationHours) === h && styles.quickDurTextActive]}>
+                  {h % 1 === 0 ? `${h}` : `${h}`}小时
+                </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
         </View>
 
         {/* 实时预览 */}
@@ -466,9 +468,9 @@ export default function AddRecordScreen() {
             />
           </View>
           <View style={[styles.row, { alignItems: 'flex-start' }]}>
-            <Text style={styles.label}>事由/备注</Text>
+            <Text style={[styles.label, { flex: 0, width: 70 }]}>事由/备注</Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[styles.input, styles.textArea, { flex: 1 }]}
               value={reason}
               onChangeText={setReason}
               placeholder="选填"
@@ -581,11 +583,14 @@ const styles = StyleSheet.create({
     paddingTop: 6, paddingBottom: 12,
   },
   quickDurBtn: {
-    paddingHorizontal: 10, paddingVertical: 6,
+    paddingHorizontal: 8, paddingVertical: 5,
     backgroundColor: THEME.accent,
-    borderRadius: 16,
+    borderRadius: 14,
+    minWidth: 46, alignItems: 'center',
   },
-  quickDurText: { fontSize: 12, color: THEME.primary, fontWeight: '500' },
+  quickDurBtnActive: { backgroundColor: THEME.primary },
+  quickDurText: { fontSize: 11, color: THEME.primary, fontWeight: '500' },
+  quickDurTextActive: { color: '#fff' },
   bottomBar: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: THEME.card,

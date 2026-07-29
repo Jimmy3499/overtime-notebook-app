@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
-  StyleSheet, Text, View, TouchableOpacity, FlatList,
+  StyleSheet, Text, View, TouchableOpacity, FlatList, Modal, Pressable, ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useApp } from '../AppContext';
@@ -20,6 +20,7 @@ export default function CalendarScreen() {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
 
   const { days } = monthRange(year, month);
   const dates = dateListOfMonth(year, month);
@@ -77,6 +78,15 @@ export default function CalendarScreen() {
   };
 
   const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+
+  // 年月选择器用：生成可选年份范围（前后各扩展几年）
+  const pickerYears = useMemo(() => {
+    const currentYear = now.getFullYear();
+    const years: number[] = [];
+    for (let y = currentYear - 5; y <= currentYear + 10; y++) years.push(y);
+    return years;
+  }, []);
+  const pickerMonths = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
   // 生成日历格子数组（前面补空白）
   const cells = useMemo(() => {
@@ -139,11 +149,78 @@ export default function CalendarScreen() {
         <TouchableOpacity onPress={goPrevMonth}>
           <Text style={styles.navBtn}>‹</Text>
         </TouchableOpacity>
-        <Text style={styles.monthTitle}>{year}年{month}月</Text>
+        <TouchableOpacity onPress={() => setShowMonthPicker(true)} activeOpacity={0.7}>
+          <Text style={styles.monthTitle}>{year}年{month}月</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={goNextMonth}>
           <Text style={styles.navBtn}>›</Text>
         </TouchableOpacity>
       </View>
+
+      {/* 年月选择器弹窗 */}
+      <Modal
+        transparent
+        visible={showMonthPicker}
+        onRequestClose={() => setShowMonthPicker(false)}
+        animationType="fade"
+      >
+        <Pressable style={styles.pickerOverlay} onPress={() => setShowMonthPicker(false)}>
+          <Pressable style={styles.pickerCard} onPress={() => {}}>
+            <Text style={styles.pickerTitle}>选择年月</Text>
+
+            {/* 年份选择 */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.yearScroll}>
+              {pickerYears.map(y => (
+                <TouchableOpacity
+                  key={y}
+                  style={[styles.yearChip, y === year && styles.yearChipActive]}
+                  onPress={() => setYear(y)}
+                >
+                  <Text style={[styles.yearChipText, y === year && styles.yearChipTextActive]}>
+                    {y}年
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            {/* 月份网格 */}
+            <View style={styles.monthGrid}>
+              {pickerMonths.map(m => (
+                <TouchableOpacity
+                  key={m}
+                  style={[styles.monthChip, m === month && styles.monthChipActive]}
+                  onPress={() => { setMonth(m); setShowMonthPicker(false); }}
+                >
+                  <Text style={[styles.monthChipText, m === month && styles.monthChipTextActive]}>
+                    {m}月
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* 快捷跳转 */}
+            <View style={styles.quickJumpRow}>
+              <TouchableOpacity
+                style={styles.quickJumpBtn}
+                onPress={() => {
+                  const n = new Date();
+                  setYear(n.getFullYear());
+                  setMonth(n.getMonth() + 1);
+                  setShowMonthPicker(false);
+                }}
+              >
+                <Text style={styles.quickJumpBtnText}>📍 今天</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.quickJumpBtn}
+                onPress={() => setShowMonthPicker(false)}
+              >
+                <Text style={styles.quickJumpBtnText}>取消</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* 星期表头 */}
       <View style={styles.weekRow}>
@@ -364,4 +441,54 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
   },
   fabText: { color: '#fff', fontSize: 32, fontWeight: '300', marginTop: -2 },
+  // 年月选择器
+  pickerOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  pickerCard: {
+    backgroundColor: THEME.card,
+    borderRadius: 20,
+    padding: 20,
+    width: '85%',
+    maxWidth: 340,
+  },
+  pickerTitle: {
+    fontSize: 17, fontWeight: '600', color: THEME.text,
+    textAlign: 'center', marginBottom: 16,
+  },
+  yearScroll: {
+    flexDirection: 'row', gap: 8, paddingBottom: 12,
+  },
+  yearChip: {
+    paddingHorizontal: 14, paddingVertical: 7,
+    backgroundColor: THEME.bg, borderRadius: 16,
+    borderWidth: 1, borderColor: THEME.border,
+  },
+  yearChipActive: { backgroundColor: THEME.primary, borderColor: THEME.primary },
+  yearChipText: { fontSize: 13, color: THEME.textSub, fontWeight: '500' },
+  yearChipTextActive: { color: '#fff' },
+  monthGrid: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 8,
+    marginTop: 4,
+  },
+  monthChip: {
+    width: '22%', aspectRatio: 1.4,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: THEME.bg, borderRadius: 12,
+    borderWidth: 1, borderColor: THEME.border,
+  },
+  monthChipActive: { backgroundColor: THEME.primary, borderColor: THEME.primary },
+  monthChipText: { fontSize: 14, color: THEME.textSub, fontWeight: '500' },
+  monthChipTextActive: { color: '#fff', fontWeight: '700' },
+  quickJumpRow: {
+    flexDirection: 'row', justifyContent: 'center', gap: 16,
+    marginTop: 16, paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: THEME.border,
+  },
+  quickJumpBtn: {
+    paddingHorizontal: 20, paddingVertical: 8,
+    borderRadius: 10, backgroundColor: THEME.bg,
+  },
+  quickJumpBtnText: { fontSize: 14, color: THEME.textSub, fontWeight: '500' },
 });
