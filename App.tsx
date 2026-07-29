@@ -13,6 +13,7 @@ import SettingsScreen from './src/screens/SettingsScreen';
 import CompOffScreen from './src/screens/CompOffScreen';
 import HolidaysScreen from './src/screens/HolidaysScreen';
 import SwipeableTabs from './src/components/SwipeableTabs';
+import AppHeader from './src/components/AppHeader';
 import { THEME } from './src/constants';
 
 const Stack = createNativeStackNavigator();
@@ -36,30 +37,26 @@ function RootStack() {
         name="Main"
         component={MainTabs}
         options={{
-          title: '加班本',
-          headerStyle: { backgroundColor: THEME.primary, height: 28 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: '600', fontSize: 15 },
+          header: () => <AppHeader title="加班本" />,
         }}
       />
       <Stack.Screen
         name="AddRecord"
         component={AddRecordScreen}
         options={({ route }: any) => ({
-          title: route.params?.record ? '编辑记录' : '添加记录',
-          headerStyle: { backgroundColor: THEME.primary, height: 28 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: '600', fontSize: 15 },
+          header: () => (
+            <AppHeader
+              title={route.params?.record ? '编辑记录' : '添加记录'}
+              showBack
+            />
+          ),
         })}
       />
       <Stack.Screen
         name="Holidays"
         component={HolidaysScreen}
         options={{
-          title: '节假日配置',
-          headerStyle: { backgroundColor: THEME.primary, height: 28 },
-          headerTintColor: '#fff',
-          headerTitleStyle: { fontWeight: '600', fontSize: 15 },
+          header: () => <AppHeader title="节假日配置" showBack />,
         }}
       />
     </Stack.Navigator>

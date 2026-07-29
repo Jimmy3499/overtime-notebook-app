@@ -27,6 +27,13 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#b45309",
+          "resizeMode": "contain"
+        }
+      ],
       "@react-native-community/datetimepicker",
       "expo-sharing"
     ]
