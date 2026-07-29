@@ -4,7 +4,7 @@
 
 ## 文件说明
 
-- **APK 安装包**：不在仓库内（原生目录 `/android` 已 gitignore），请到 [GitHub Releases](https://github.com/Jimmy3499/overtime-notebook-app/releases) 下载 `app-release.apk`（**arm64-v8a 单架构**，v3.0.0 正式签名版，覆盖 2015 年后的主流安卓手机）
+- **APK 安装包**：不在仓库内（原生目录 `/android` 已 gitignore），请到 [GitHub Releases](https://github.com/Jimmy3499/overtime-notebook-app/releases) 下载 `app-release.apk`（**arm64-v8a 单架构**，v3.0.0 正式签名版，**仅支持 64 位设备**，32 位-only 的老手机无法安装）
 - `src/` - 源代码目录（TypeScript + React Native）
 - `assets/` - 图标、启动图等资源
 - `App.tsx` - 应用入口
@@ -57,7 +57,9 @@ bash build-android.sh debug     # 构建 debug 包，产物: android/app/build/o
 
 > 说明：
 > - release 构建需要签名密钥库。脚本默认在仓库根目录生成 `release-key.keystore`（已被 `.gitignore` 忽略，不会提交）；如需用自己的密钥，请修改脚本中的 `keytool` 参数与 `android/app/keystore.properties`。
+> - **⚠️ 密钥库保管（非常重要）**：`release-key.keystore` 不入库。若要给用户推送更新，**必须使用与已发布版本相同的 keystore**，否则用户设备上已装版本会因"签名冲突"无法覆盖安装（只能卸载重装，本地数据将丢失）。脚本每次运行若根目录已存在该文件则会复用（不会覆盖）；若工作树被清空或换机器重新 clone 而缺失该文件，脚本会生成全新密钥。请务必妥善保存仓库外的备份 `overtime-notebook-app-release-keystore/`，切勿公开或提交到 git。
 > - `/android` 为预生成目录，已被 gitignore，无需提交；`expo prebuild` 会按需重新生成。
+> - release 构建已默认移除 `SYSTEM_ALERT_WINDOW`（"显示在其他应用上层"）这一多余权限。
 
 ## 技术栈
 
