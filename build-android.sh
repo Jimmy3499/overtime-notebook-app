@@ -65,7 +65,7 @@ from PIL import Image
 # 与启动页背景同色 #b45309，视觉上仍是纯色启动页
 Image.new("RGB", (512, 512), (0xb4, 0x53, 0x09)).save("android/app/src/main/res/drawable/splashscreen_logo.png")
 print("已生成纯色 splashscreen_logo.png")
-  PY
+PY
 fi
 
 echo "[2.9/6] 移除不必要的 SYSTEM_ALERT_WINDOW 权限（来自 Expo 默认模板，对离线记账 App 无意义且未在隐私政策中声明）..."
