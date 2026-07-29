@@ -41,34 +41,45 @@ PY
 fi
 
 if [ "$BUILD_TYPE" = "release" ]; then
-  echo "[3/6] 生成 release 签名密钥库 (keystore)..."
-  KS=android/app/release-key.keystore
-  PROPS=android/app/keystore.properties
+  echo "[3/6] 准备 release 签名密钥库 (keystore)..."
   ALIAS=overtime
   STOREPASS=overtime123
   KEYPASS=overtime123
-  if [ ! -f "$KS" ]; then
+  KS_SRC=release-key.keystore          # 仓库根目录（已被 .gitignore 忽略，不会提交）
+  KS_DST=android/app/release-key.keystore
+  PROPS_DST=android/app/keystore.properties
+  if [ ! -f "$KS_SRC" ]; then
     keytool -genkeypair -v \
-      -keystore "$KS" -alias "$ALIAS" \
+      -keystore "$KS_SRC" -alias "$ALIAS" \
       -keyalg RSA -keysize 2048 -validity 10000 \
       -storepass "$STOREPASS" -keypass "$KEYPASS" \
       -dname "CN=Jimmy3499, OU=Overtime Notebook, O=Jimmy3499, L=, ST=, C=CN"
-    echo "已生成 release-key.keystore"
+    echo "已生成 release-key.keystore（位于仓库根目录，已 gitignore）"
+  else
+    echo "复用已存在的 release-key.keystore"
   fi
-  cat > "$PROPS" <<EOF
+  cp "$KS_SRC" "$KS_DST"
+  cat > "$PROPS_DST" <<EOF
 STORE_FILE=release-key.keystore
 STORE_PASSWORD=$STOREPASS
 KEY_ALIAS=$ALIAS
 KEY_PASSWORD=$KEYPASS
 EOF
-  echo "已写入 keystore.properties"
+  echo "已写入 android/app/keystore.properties"
 
   echo "[4/6] 在 build.gradle 注入 release 签名配置..."
   python3 - <<'PY'
-import re
 p = "android/app/build.gradle"
 s = open(p).read()
 
+debug_block = '''    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }'''
 release_block = '''    release {
         def ksFile = rootProject.file('app/keystore.properties')
         if (ksFile.exists()) {
@@ -79,19 +90,17 @@ release_block = '''    release {
             keyAlias ks['KEY_ALIAS']
             keyPassword ks['KEY_PASSWORD']
         }
-    }
-'''
+    }'''
+
 if 'signingConfigs.release' not in s:
-    s = re.sub(r'(signingConfigs\s*\{)(.*?)(\n\})',
-               lambda m: m.group(1) + m.group(2) + '\n' + release_block + m.group(3),
-               s, count=1, flags=re.S)
+    assert debug_block in s, "未找到 signingConfigs debug 块，无法注入 release 签名"
+    s = s.replace(debug_block, debug_block + "\n" + release_block, 1)
     print("已注入 signingConfigs.release 块")
 
 if 'signingConfig signingConfigs.release' not in s:
-    s = re.sub(r'(buildTypes\s*\{.*?release\s*\{.*?)signingConfig signingConfigs\.debug',
-               lambda m: m.group(1) + 'signingConfig signingConfigs.release',
-               s, count=1, flags=re.S)
-    print("已将 release buildType 的签名切换为 signingConfigs.release")
+    # 将 buildType 的签名统一切换到 release（debug buildType 用 release 密钥也无妨）
+    s = s.replace('signingConfig signingConfigs.debug', 'signingConfig signingConfigs.release')
+    print("已将 buildType 签名切换为 signingConfigs.release")
 
 open(p, "w").write(s)
 PY
@@ -101,10 +110,10 @@ PY
   CMAKE_BUILD_PARALLEL_LEVEL=1 taskset -c 0-1 ./gradlew assembleRelease --no-daemon
   cd ..
 
-  # 把密钥库备份到仓库外，方便日后升级使用（请勿提交到 git）
+  # 备份密钥库到仓库外，方便日后升级使用（请勿提交到 git）
   BACKUP_DIR="../overtime-notebook-app-release-keystore"
   mkdir -p "$BACKUP_DIR"
-  cp android/app/release-key.keystore "$BACKUP_DIR/release-key.keystore"
+  cp "$KS_SRC" "$BACKUP_DIR/release-key.keystore"
   {
     echo "STORE_FILE=release-key.keystore"
     echo "STORE_PASSWORD=$STOREPASS"
