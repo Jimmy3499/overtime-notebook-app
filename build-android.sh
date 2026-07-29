@@ -49,6 +49,13 @@ else:
 open(p, "w").write(s)
 PY
 
+echo "[2.8/6] 仅保留 arm64-v8a 架构（修改 gradle.properties 的 reactNativeArchitectures，RN 插件据此设置 abiFilters）..."
+GP=android/gradle.properties
+if [ -f "$GP" ]; then
+  sed -i 's/^reactNativeArchitectures=.*/reactNativeArchitectures=arm64-v8a/' "$GP"
+  echo "已设置 reactNativeArchitectures=arm64-v8a"
+fi
+
 echo "[2.6/6] 确保 splash 纯色 logo 存在（expo-splash-screen 主题会引用 @drawable/splashscreen_logo）..."
 SPLASH_LOGO=android/app/src/main/res/drawable/splashscreen_logo.png
 if [ ! -f "$SPLASH_LOGO" ]; then
