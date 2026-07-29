@@ -72,25 +72,23 @@ EOF
 p = "android/app/build.gradle"
 s = open(p).read()
 
-debug_block = '''    signingConfigs {
-        debug {
+debug_block = '''        debug {
             storeFile file('debug.keystore')
             storePassword 'android'
             keyAlias 'androiddebugkey'
             keyPassword 'android'
-        }
-    }'''
-release_block = '''    release {
-        def ksFile = rootProject.file('app/keystore.properties')
-        if (ksFile.exists()) {
-            def ks = new Properties()
-            ks.load(new FileInputStream(ksFile))
-            storeFile file(ks['STORE_FILE'])
-            storePassword ks['STORE_PASSWORD']
-            keyAlias ks['KEY_ALIAS']
-            keyPassword ks['KEY_PASSWORD']
-        }
-    }'''
+        }'''
+release_block = '''        release {
+            def ksFile = rootProject.file('app/keystore.properties')
+            if (ksFile.exists()) {
+                def ks = new Properties()
+                ks.load(new FileInputStream(ksFile))
+                storeFile file(ks['STORE_FILE'])
+                storePassword ks['STORE_PASSWORD']
+                keyAlias ks['KEY_ALIAS']
+                keyPassword ks['KEY_PASSWORD']
+            }
+        }'''
 
 if 'signingConfigs.release' not in s:
     assert debug_block in s, "未找到 signingConfigs debug 块，无法注入 release 签名"
