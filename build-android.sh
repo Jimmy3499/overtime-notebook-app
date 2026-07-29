@@ -16,6 +16,12 @@ fi
 echo "[2/4] 生成原生项目..."
 npx expo prebuild --platform android --clean
 
+echo "[2.5/4] 让 debug 包也打包 JS bundle（避免安装后报 'Unable to load script'）..."
+if ! grep -q "debuggableVariants" android/app/build.gradle; then
+  sed -i '/bundleCommand = "export:embed"/a\    debuggableVariants = []' android/app/build.gradle
+  echo "已注入 debuggableVariants = []"
+fi
+
 echo "[3/4] 构建 APK (debug)..."
 cd android
 ./gradlew assembleDebug
