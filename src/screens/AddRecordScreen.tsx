@@ -8,11 +8,10 @@ import { useApp } from '../AppContext';
 import { OVERTIME_TYPES, OVERTIME_TYPE_INFO, RECORD_TYPES, RECORD_TYPE_INFO, THEME } from '../constants';
 import {
   todayStr, nowTimeStr, formatMoney, formatDuration,
-  calcRawDurationHours, calcEffectiveDuration, calcPay, calcTotalIncome,
-  calcLateDurationHours, calcLateDeduction, calcEndTimeFromDuration,
-  timeToMinutes, minutesToTime,
+  calcRawDurationHours, calcLateDurationHours, calcEndTimeFromDuration,
+  calcRecordFields, timeToMinutes, minutesToTime,
 } from '../utils';
-import type { OvertimeType, RecordType } from '../types';
+import type { OvertimeType, RecordType, RecordInput } from '../types';
 
 export default function AddRecordScreen() {
   const route = useRoute<any>();
@@ -81,47 +80,25 @@ export default function AddRecordScreen() {
     setCrossDay(false);
   }, [recordType, date, editing, settings, detectType]);
 
-  // 计算预览值
+  // 计算预览值（与落库共用 calcRecordFields，保证预览 == 实际保存）
   const preview = useMemo(() => {
     const durVal = parseFloat(durationHours);
     const hasManualDuration = !isNaN(durVal) && durVal > 0;
-
-    if (isLate) {
-      const rawLate = calcLateDurationHours(normalOffTime, actualOffTime);
-      const deduction = calcLateDeduction(rawLate, settings);
-      return {
-        rawHours: rawLate,
-        effectiveHours: rawLate,
-        pay: 0,
-        totalIncome: 0,
-        deduction,
-        netIncome: -deduction,
-        hasManualDuration,
-      };
-    }
-
-    let rawHours: number;
-    if (hasManualDuration) {
-      rawHours = durVal;
-    } else {
-      rawHours = calcRawDurationHours(normalOffTime, actualOffTime, crossDay);
-    }
-    const effective = isLeave
-      ? rawHours
-      : calcEffectiveDuration(rawHours, settings, type);
-    const pay = isLeave ? 0 : calcPay(effective, type, settings);
-    const sub = parseFloat(subsidy) || 0;
-    const totalIncome = calcTotalIncome(pay, sub);
-    return {
-      rawHours,
-      effectiveHours: effective,
-      pay,
-      totalIncome,
-      deduction: 0,
-      netIncome: totalIncome,
-      hasManualDuration,
+    const input: RecordInput = {
+      date,
+      normalOffTime,
+      actualOffTime,
+      crossDay,
+      type,
+      reason,
+      recordType,
+      manualDuration: hasManualDuration ? durVal : 0,
+      useCompOff,
+      subsidy: parseFloat(subsidy) || 0,
+      location,
     };
-  }, [recordType, normalOffTime, actualOffTime, crossDay, durationHours, type, subsidy, isLeave, isLate, settings]);
+    return { ...calcRecordFields(input, settings), hasManualDuration };
+  }, [recordType, normalOffTime, actualOffTime, crossDay, durationHours, type, subsidy, settings]);
 
   // 时长变化 → 推算结束时间
   const onDurationChange = (text: string) => {

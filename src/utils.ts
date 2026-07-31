@@ -1,5 +1,5 @@
 import { DEFAULT_SETTINGS, OVERTIME_TYPE_INFO } from './constants';
-import type { OvertimeType, Settings } from './types';
+import type { OvertimeType, RecordType, Settings, RecordInput, CalcFields, OvertimeRecord } from './types';
 
 // ========== 时间工具 ==========
 
@@ -227,4 +227,100 @@ export function detectOvertimeType(
   if (holiday?.type === 'holiday') return 'holiday';
   if (holiday?.type === 'makeup') return 'weekday';
   return isWeekend(dateStr) ? 'weekend' : 'weekday';
+}
+
+// ========== 统一计算入口 ==========
+// 根据输入的记录字段与设置，计算时长/工资/扣款等结果。
+// 这是「添加/编辑落库」与「添加页实时预览」唯一的实现来源，
+// 二者调用同一个函数，确保「预览 == 落库」，避免规则改动后两处漂移。
+
+export function calcRecordFields(input: RecordInput, settings: Settings): CalcFields {
+  const isLeave = input.recordType === 'leave';
+  const isLate = input.recordType === 'late';
+
+  if (isLate) {
+    const rawLateHours = calcLateDurationHours(input.normalOffTime, input.actualOffTime);
+    const deduction = calcLateDeduction(rawLateHours, settings);
+    return {
+      rawHours: rawLateHours,
+      effectiveHours: rawLateHours,
+      durationHours: +rawLateHours.toFixed(2),
+      pay: 0,
+      totalIncome: 0,
+      deduction: +deduction.toFixed(2),
+      netIncome: deduction === 0 ? 0 : -deduction,
+    };
+  }
+
+  // 加班 / 请假：优先使用手动时长，否则按起止时间计算
+  if (input.manualDuration > 0) {
+    const raw = input.manualDuration;
+    const effective = isLeave
+      ? raw
+      : calcEffectiveDuration(raw, settings, input.type);
+    const pay = isLeave ? 0 : calcPay(effective, input.type, settings);
+    const totalIncome = calcTotalIncome(pay, input.subsidy);
+    return {
+      rawHours: raw,
+      effectiveHours: effective,
+      durationHours: effective,
+      pay,
+      totalIncome,
+      deduction: 0,
+      netIncome: totalIncome,
+    };
+  }
+
+  const rawHours = calcRawDurationHours(input.normalOffTime, input.actualOffTime, input.crossDay);
+  const effective = isLeave
+    ? rawHours
+    : calcEffectiveDuration(rawHours, settings, input.type);
+  const pay = isLeave ? 0 : calcPay(effective, input.type, settings);
+  const totalIncome = calcTotalIncome(pay, input.subsidy);
+  return {
+    rawHours,
+    effectiveHours: effective,
+    durationHours: effective,
+    pay,
+    totalIncome,
+    deduction: 0,
+    netIncome: totalIncome,
+  };
+}
+
+/**
+ * 日历多选汇总：对所选日期的全部记录（加班/请假/迟到）聚合。
+ * - hours：所选日期每天 Σ durationHours（加班=有效时长、请假=实际时长、迟到=迟到时长）
+ * - pay：所选日期每天 Σ netIncome（加班/请假净收入、迟到为负扣款）
+ * 汇总结果按日期升序排列，保证顺序稳定。
+ */
+export interface SelectedDaySummary {
+  date: string;        // YYYY-MM-DD
+  count: number;       // 当天记录条数
+  hours: number;       // 当天时长合计（小时）
+  pay: number;         // 当天净收入合计（元）
+}
+
+export interface SelectionSummary {
+  perDay: SelectedDaySummary[];
+  totalHours: number;
+  totalPay: number;
+}
+
+export function calcSelectionSummary(
+  selectedDates: string[],
+  records: OvertimeRecord[],
+): SelectionSummary {
+  const perDay: SelectedDaySummary[] = selectedDates
+    .slice()
+    .sort()
+    .map((d) => {
+      const recs = records.filter((r) => r.date === d);
+      const hours = recs.reduce((s, r) => s + (r.durationHours || 0), 0);
+      const pay = recs.reduce((s, r) => s + (r.netIncome || 0), 0);
+      return { date: d, count: recs.length, hours, pay };
+    });
+  const totalHours = perDay.reduce((s, d) => s + d.hours, 0);
+  const totalPay = perDay.reduce((s, d) => s + d.pay, 0);
+  return { perDay, totalHours, totalPay };
 }

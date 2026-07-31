@@ -51,7 +51,10 @@ export default function HolidaysScreen() {
         `已拉取近三年官方节假日。\n新增 ${r.added} 条，更新 ${r.updated} 条，保留原有 ${r.kept} 条。`,
       );
     } catch {
-      Alert.alert('同步失败', '无法获取官方节假日，请检查网络后重试。');
+      Alert.alert(
+        '同步失败',
+        '未能从网络获取官方节假日，当前使用应用内置的节假日数据（已覆盖 2025–2026 年），功能不受影响。你可以稍后重试，或在下方手动添加 / 编辑。',
+      );
     } finally {
       setSyncing(false);
     }

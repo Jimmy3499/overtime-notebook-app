@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useEffect, useReducer, useCallback, useMemo } from 'react';
 import { loadRecords, saveRecords, loadSettings, saveSettings, loadHolidays, saveHolidays, loadCompOff, saveCompOff, loadMarkedDates, saveMarkedDates, loadHolidaySyncMeta, saveHolidaySyncMeta } from './storage';
-import type { OvertimeRecord, Settings, HolidayConfig, CompOffInventory, RecordType, OvertimeType } from './types';
+import type { OvertimeRecord, Settings, HolidayConfig, CompOffInventory, RecordType, OvertimeType, RecordInput } from './types';
 import { DEFAULT_SETTINGS } from './constants';
 import {
-  genId, calcRawDurationHours, calcEffectiveDuration, calcPay, calcTotalIncome,
-  calcLateDurationHours, calcLateDeduction, calcEndTimeFromDuration,
-  defaultSettings, detectOvertimeType, todayStr,
+  genId, calcEndTimeFromDuration,
+  defaultSettings, detectOvertimeType, todayStr, calcRecordFields,
 } from './utils';
 import { fetchHolidaysForYears, mergeHolidays, defaultSyncYears, FALLBACK_HOLIDAYS } from './holidaySync';
 
@@ -85,73 +84,8 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-// 添加/编辑记录的输入参数
-export interface RecordInput {
-  date: string;
-  normalOffTime: string;
-  actualOffTime: string;
-  crossDay: boolean;
-  type: OvertimeRecord['type'];
-  reason: string;
-  recordType: RecordType;
-  manualDuration: number;
-  useCompOff: boolean;
-  subsidy: number;
-  location: string;
-}
-
-// 根据 input 和设置计算记录字段
-function buildRecordFields(input: RecordInput, settings: Settings) {
-  const isLeave = input.recordType === 'leave';
-  const isLate = input.recordType === 'late';
-
-  if (isLate) {
-    // 迟到：计算迟到时长和扣款
-    const rawLateHours = calcLateDurationHours(input.normalOffTime, input.actualOffTime);
-    const effectiveLateHours = settings.lateRoundToHalfHour
-      ? rawLateHours // 扣款里再取整，这里先存原始
-      : rawLateHours;
-    const deduction = calcLateDeduction(rawLateHours, settings);
-    return {
-      durationHours: +effectiveLateHours.toFixed(2),
-      pay: 0,
-      totalIncome: 0,
-      deduction: +deduction.toFixed(2),
-      netIncome: -deduction,
-    };
-  }
-
-  // 加班 / 请假
-  if (input.manualDuration > 0) {
-    const raw = input.manualDuration;
-    const effective = isLeave
-      ? raw
-      : calcEffectiveDuration(raw, settings, input.type);
-    const pay = isLeave ? 0 : calcPay(effective, input.type, settings);
-    const totalIncome = calcTotalIncome(pay, input.subsidy);
-    return {
-      durationHours: effective,
-      pay,
-      totalIncome,
-      deduction: 0,
-      netIncome: totalIncome,
-    };
-  }
-
-  const rawHours = calcRawDurationHours(input.normalOffTime, input.actualOffTime, input.crossDay);
-  const effective = isLeave
-    ? rawHours
-    : calcEffectiveDuration(rawHours, settings, input.type);
-  const pay = isLeave ? 0 : calcPay(effective, input.type, settings);
-  const totalIncome = calcTotalIncome(pay, input.subsidy);
-  return {
-    durationHours: effective,
-    pay,
-    totalIncome,
-    deduction: 0,
-    netIncome: totalIncome,
-  };
-}
+// 添加/编辑记录的输入参数类型见 src/types.ts 的 RecordInput
+// 记录计算逻辑统一由 src/utils.ts 的 calcRecordFields 提供
 
 // 迁移旧记录到新格式
 function migrateRecords(records: OvertimeRecord[]): OvertimeRecord[] {
@@ -200,7 +134,7 @@ function recalcRecords(records: OvertimeRecord[], settings: Settings): OvertimeR
       subsidy: r.subsidy,
       location: r.location,
     };
-    const fields = buildRecordFields(input, settings);
+    const fields = calcRecordFields(input, settings);
     return {
       ...r,
       durationHours: fields.durationHours,
@@ -286,7 +220,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [state.markedDates, state.hydrated]);
 
   const addRecord = useCallback((input: RecordInput): OvertimeRecord => {
-    const fields = buildRecordFields(input, state.settings);
+    const fields = calcRecordFields(input, state.settings);
     const record: OvertimeRecord = {
       id: genId(),
       date: input.date,
@@ -315,7 +249,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateRecord = useCallback((id: string, input: RecordInput): OvertimeRecord | null => {
     const existing = state.records.find(r => r.id === id);
     if (!existing) return null;
-    const fields = buildRecordFields(input, state.settings);
+    const fields = calcRecordFields(input, state.settings);
     const updated: OvertimeRecord = {
       ...existing,
       date: input.date,
@@ -360,7 +294,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       subsidy: existing.subsidy,
       location: existing.location,
     };
-    const newRecord = buildRecordFields(input, state.settings);
+    const newRecord = calcRecordFields(input, state.settings);
     const record: OvertimeRecord = {
       id: genId(),
       ...input,

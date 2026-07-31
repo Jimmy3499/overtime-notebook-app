@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "jsx": "react-native",
+    "isolatedModules": true,
+    "rootDir": ".",
+    "types": ["jest", "node"]
+  }
+}

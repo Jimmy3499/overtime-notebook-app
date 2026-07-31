@@ -7,7 +7,7 @@ import { useApp } from '../AppContext';
 import { THEME, OVERTIME_TYPE_INFO, RECORD_TYPE_INFO } from '../constants';
 import {
   monthRange, dateListOfMonth, formatDate, formatDuration, formatMoney,
-  dayOfWeek,
+  dayOfWeek, calcSelectionSummary,
 } from '../utils';
 import RecordCard from '../components/RecordCard';
 import type { OvertimeRecord } from '../types';
@@ -21,6 +21,10 @@ export default function CalendarScreen() {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
+  // 多选模式相关状态
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [calcVisible, setCalcVisible] = useState(false);
 
   const { days } = monthRange(year, month);
   const dates = dateListOfMonth(year, month);
@@ -53,7 +57,7 @@ export default function CalendarScreen() {
     const isWeekend = dayOfWeek(dateStr) === 0 || dayOfWeek(dateStr) === 6;
 
     // 主标记颜色（优先显示）
-    let markColor = null;
+    let markColor: string | undefined;
     if (hasOvertime) {
       const types = dayRecords.filter(r => (r.recordType || 'overtime') === 'overtime').map(r => r.type);
       if (types.includes('holiday')) markColor = OVERTIME_TYPE_INFO.holiday.color;
@@ -61,7 +65,6 @@ export default function CalendarScreen() {
       else markColor = OVERTIME_TYPE_INFO.weekday.color;
     }
 
-    // 灰色标记：普通工作日（非周末、非假期、非调休补班、无加班记录）
     return { hasOvertime, hasLeave, hasLate, holiday, isWeekend, markColor, dayRecords };
   };
 
@@ -76,6 +79,27 @@ export default function CalendarScreen() {
     if (month === 12) { setYear(year + 1); setMonth(1); }
     else setMonth(month + 1);
   };
+
+  // 切换多选模式（退出时清空已选）
+  const toggleSelectionMode = () => {
+    if (selectionMode) {
+      setSelectionMode(false);
+      setSelectedDates([]);
+    } else {
+      setSelectionMode(true);
+    }
+  };
+
+  // 在多选模式下切换某日期的选中状态
+  const toggleSelect = (d: string) => {
+    setSelectedDates(prev => (prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]));
+  };
+
+  // 所选日期的汇总结果（按全部记录类型汇总，复用 utils 纯函数）
+  const calcResult = useMemo(
+    () => calcSelectionSummary(selectedDates, records),
+    [selectedDates, records],
+  );
 
   const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 
@@ -105,6 +129,7 @@ export default function CalendarScreen() {
     const dayNum = parseInt(dateStr.split('-')[2], 10);
     const isToday = dateStr === new Date().toISOString().slice(0, 10);
     const isSelected = dateStr === selectedDate;
+    const inSelection = selectionMode && selectedDates.includes(dateStr);
     const isMarked = markedDates.includes(dateStr);
 
     let textColor = THEME.text;
@@ -114,8 +139,16 @@ export default function CalendarScreen() {
 
     return (
       <TouchableOpacity
-        style={[styles.dayCell, isMarked && styles.dayMarked, isSelected && styles.daySelected]}
-        onPress={() => setSelectedDate(dateStr === selectedDate ? null : dateStr)}
+        style={[
+          styles.dayCell,
+          isMarked && styles.dayMarked,
+          isSelected && !selectionMode && styles.daySelected,
+          inSelection && styles.dayInSelection,
+        ]}
+        onPress={() => {
+          if (selectionMode) toggleSelect(dateStr);
+          else setSelectedDate(dateStr === selectedDate ? null : dateStr);
+        }}
         onLongPress={() => toggleMarkedDate(dateStr)}
         activeOpacity={0.7}
       >
@@ -154,6 +187,23 @@ export default function CalendarScreen() {
         </TouchableOpacity>
         <TouchableOpacity onPress={goNextMonth}>
           <Text style={styles.navBtn}>›</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 多选模式开关 */}
+      <View style={styles.selectBar}>
+        <Text style={styles.selectHint}>
+          {selectionMode
+            ? `已选 ${selectedDates.length} 天 · 点击日期加入/移除`
+            : '点击日期查看记录 · 长按日期标记'}
+        </Text>
+        <TouchableOpacity
+          style={[styles.selectBtn, selectionMode && styles.selectBtnActive]}
+          onPress={toggleSelectionMode}
+        >
+          <Text style={[styles.selectBtnText, selectionMode && styles.selectBtnTextActive]}>
+            {selectionMode ? '退出选择' : '选择'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -261,8 +311,8 @@ export default function CalendarScreen() {
         </View>
       </View>
 
-      {/* 选中日期的记录列表 */}
-      {selectedDate ? (
+      {/* 选中日期的记录列表（非多选模式下） */}
+      {!selectionMode && selectedDate ? (
         <View style={styles.listContainer}>
           <View style={styles.listHeader}>
             <Text style={styles.listTitle}>
@@ -298,19 +348,81 @@ export default function CalendarScreen() {
             contentContainerStyle={styles.listContent}
           />
         </View>
-      ) : (
+      ) : !selectionMode ? (
         <View style={styles.hintContainer}>
           <Text style={styles.hintText}>点击日期查看记录 · 长按日期标记/取消灰色块</Text>
         </View>
+      ) : null}
+
+      {/* 多选模式下的汇总操作条 */}
+      {selectionMode && (
+        <View style={styles.calcBar}>
+          <Text style={styles.calcCount}>已选 {selectedDates.length} 天</Text>
+          <TouchableOpacity
+            style={[styles.calcBtn, selectedDates.length === 0 && styles.calcBtnDisabled]}
+            onPress={() => setCalcVisible(true)}
+            disabled={selectedDates.length === 0}
+          >
+            <Text style={styles.calcBtnText}>计算总时长</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
-      {/* 悬浮添加按钮 */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('AddRecord', { initialDate: selectedDate || undefined })}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      {/* 悬浮添加按钮（仅非多选模式显示） */}
+      {!selectionMode && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => navigation.navigate('AddRecord', { initialDate: selectedDate || undefined })}
+        >
+          <Text style={styles.fabText}>+</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* 汇总结果弹窗 */}
+      <Modal transparent visible={calcVisible} onRequestClose={() => setCalcVisible(false)} animationType="fade">
+        <Pressable style={styles.calcOverlay} onPress={() => setCalcVisible(false)}>
+          <Pressable style={styles.calcCard} onPress={() => {}}>
+            <Text style={styles.calcTitle}>所选日期汇总</Text>
+
+            <View style={styles.calcTotalRow}>
+              <View style={styles.calcTotalItem}>
+                <Text style={styles.calcTotalValue}>{formatDuration(calcResult.totalHours)}</Text>
+                <Text style={styles.calcTotalLabel}>总时长</Text>
+              </View>
+              <View style={styles.calcTotalDivider} />
+              <View style={styles.calcTotalItem}>
+                <Text style={[styles.calcTotalValue, { color: THEME.primary }]}>
+                  {formatMoney(calcResult.totalPay)}
+                </Text>
+                <Text style={styles.calcTotalLabel}>合计收入</Text>
+              </View>
+            </View>
+
+            <ScrollView style={styles.calcList} contentContainerStyle={{ paddingBottom: 8 }}>
+              {calcResult.perDay.length === 0 ? (
+                <Text style={styles.calcEmpty}>未选择日期</Text>
+              ) : (
+                calcResult.perDay.map(d => (
+                  <View key={d.date} style={styles.calcRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.calcRowDate}>{formatDate(d.date)}</Text>
+                      <Text style={styles.calcRowSub}>{d.count} 条记录</Text>
+                    </View>
+                    <Text style={styles.calcRowHours}>{formatDuration(d.hours)}</Text>
+                    <Text style={[styles.calcRowPay, d.pay < 0 && { color: THEME.danger }]}>
+                      {formatMoney(d.pay)}
+                    </Text>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+
+            <TouchableOpacity style={styles.calcClose} onPress={() => setCalcVisible(false)}>
+              <Text style={styles.calcCloseText}>关闭</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -326,6 +438,22 @@ const styles = StyleSheet.create({
   },
   monthTitle: { fontSize: 17, fontWeight: '600', color: THEME.text },
   navBtn: { fontSize: 28, color: THEME.primary, paddingHorizontal: 8, marginTop: -2 },
+  // 多选模式开关
+  selectBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 8,
+    backgroundColor: THEME.card,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: THEME.divider,
+  },
+  selectHint: { flex: 1, fontSize: 12, color: THEME.textSub, marginRight: 8 },
+  selectBtn: {
+    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 14,
+    backgroundColor: THEME.bg, borderWidth: 1, borderColor: THEME.border,
+  },
+  selectBtnActive: { backgroundColor: THEME.primary, borderColor: THEME.primary },
+  selectBtnText: { fontSize: 13, color: THEME.text, fontWeight: '500' },
+  selectBtnTextActive: { color: '#fff' },
   weekRow: {
     flexDirection: 'row', paddingVertical: 6,
     backgroundColor: THEME.card,
@@ -351,6 +479,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#e5e7eb',
   },
   daySelected: {
+    borderWidth: 2,
+    borderColor: THEME.primary,
+  },
+  dayInSelection: {
+    backgroundColor: THEME.accent,
     borderWidth: 2,
     borderColor: THEME.primary,
   },
@@ -416,8 +549,7 @@ const styles = StyleSheet.create({
   listTitle: { fontSize: 14, fontWeight: '600', color: THEME.text },
   addBtn: {
     backgroundColor: THEME.primary,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 10, paddingVertical: 4,
     borderRadius: 6,
   },
   addBtnText: { color: THEME.accent, fontSize: 12, fontWeight: '500' },
@@ -433,6 +565,22 @@ const styles = StyleSheet.create({
   emptyAddBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
   hintContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   hintText: { fontSize: 14, color: THEME.textMute },
+  // 多选汇总操作条
+  calcBar: {
+    position: 'absolute', left: 12, right: 12, bottom: 24,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: THEME.card, borderRadius: 14,
+    paddingHorizontal: 16, paddingVertical: 12,
+    elevation: 6, shadowColor: '#1e3a5f', shadowOpacity: 0.25, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  calcCount: { fontSize: 14, color: THEME.text, fontWeight: '500' },
+  calcBtn: {
+    backgroundColor: THEME.primary,
+    paddingHorizontal: 18, paddingVertical: 8, borderRadius: 10,
+  },
+  calcBtnDisabled: { opacity: 0.4 },
+  calcBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
   fab: {
     position: 'absolute', right: 22, bottom: 28, width: 60, height: 60,
     borderRadius: 30, backgroundColor: THEME.primary,
@@ -491,4 +639,36 @@ const styles = StyleSheet.create({
     borderRadius: 10, backgroundColor: THEME.bg,
   },
   quickJumpBtnText: { fontSize: 14, color: THEME.textSub, fontWeight: '500' },
+  // 汇总结果弹窗
+  calcOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center', alignItems: 'center', padding: 24,
+  },
+  calcCard: {
+    backgroundColor: THEME.card, borderRadius: 16, padding: 20,
+    width: '100%', maxWidth: 380, maxHeight: '80%',
+  },
+  calcTitle: { fontSize: 16, fontWeight: '600', color: THEME.text, textAlign: 'center', marginBottom: 12 },
+  calcTotalRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around',
+    backgroundColor: THEME.bg, borderRadius: 12, paddingVertical: 16, marginBottom: 12,
+  },
+  calcTotalItem: { alignItems: 'center', flex: 1 },
+  calcTotalDivider: { width: 1, height: 36, backgroundColor: THEME.border },
+  calcTotalValue: { fontSize: 22, fontWeight: '700', color: THEME.text },
+  calcTotalLabel: { fontSize: 12, color: THEME.textSub, marginTop: 4 },
+  calcList: { maxHeight: 280 },
+  calcRow: {
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: THEME.divider,
+  },
+  calcRowDate: { fontSize: 14, color: THEME.text, fontWeight: '500' },
+  calcRowSub: { fontSize: 11, color: THEME.textMute, marginTop: 2 },
+  calcRowHours: { width: 90, textAlign: 'right', fontSize: 14, color: THEME.brown, fontWeight: '600' },
+  calcRowPay: { width: 90, textAlign: 'right', fontSize: 14, color: THEME.primary, fontWeight: '600' },
+  calcEmpty: { textAlign: 'center', color: THEME.textMute, paddingVertical: 24, fontSize: 13 },
+  calcClose: {
+    marginTop: 12, backgroundColor: THEME.primary, borderRadius: 10, paddingVertical: 12, alignItems: 'center',
+  },
+  calcCloseText: { color: '#fff', fontSize: 15, fontWeight: '600' },
 });

@@ -87,3 +87,29 @@ export interface CheckInRecord {
   type: 'check_in' | 'check_out';
   location?: string;
 }
+
+// 添加/编辑记录的输入参数（与 OvertimeRecord 一一对应，仅携带计算所需字段）
+export interface RecordInput {
+  date: string;
+  normalOffTime: string;
+  actualOffTime: string;
+  crossDay: boolean;
+  type: OvertimeType;
+  reason: string;
+  recordType: RecordType;
+  manualDuration: number;
+  useCompOff: boolean;
+  subsidy: number;
+  location: string;
+}
+
+// 一条记录经计算后得到的字段（落库与预览共用，保证「预览 == 落库」）
+export interface CalcFields {
+  rawHours: number;        // 原始时长（未扣休息、未取整）
+  effectiveHours: number;  // 有效时长：加班=扣休息后；请假=原始；迟到=原始
+  durationHours: number;   // 存库时长（与 effectiveHours 一致）
+  pay: number;             // 加班工资（元）；请假/迟到=0
+  totalIncome: number;     // 收入合计（工资 + 补贴）
+  deduction: number;       // 扣款（元）；加班/请假=0
+  netIncome: number;       // 净收入 = totalIncome - deduction
+}

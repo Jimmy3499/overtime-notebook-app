@@ -23,10 +23,7 @@ export default function CompOffScreen() {
     [records]
   );
 
-  const usedHours = useMemo(
-    () => compOff.records.reduce((s, r) => s + Math.max(0, r.hours), 0) - compOff.records.reduce((s, r) => s + Math.min(0, r.hours), 0),
-    [compOff.records]
-  );
+  const usedHours = compOff.usedHours;
 
   const handleAddFromRecord = (record: OvertimeRecord) => {
     const hours = record.durationHours * (settings.compOffRate || 1);
