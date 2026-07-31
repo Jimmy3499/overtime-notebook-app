@@ -13,6 +13,7 @@ import SettingsScreen from './src/screens/SettingsScreen';
 import CompOffScreen from './src/screens/CompOffScreen';
 import HolidaysScreen from './src/screens/HolidaysScreen';
 import AgreementScreen from './src/screens/AgreementScreen';
+import GuideScreen from './src/screens/GuideScreen';
 import SwipeableTabs from './src/components/SwipeableTabs';
 import AppHeader from './src/components/AppHeader';
 import { THEME } from './src/constants';
@@ -71,6 +72,13 @@ function RootStack() {
             />
           ),
         })}
+      />
+      <Stack.Screen
+        name="Guide"
+        component={GuideScreen}
+        options={{
+          header: () => <AppHeader title="使用说明" showBack />,
+        }}
       />
     </Stack.Navigator>
   );

@@ -423,6 +423,13 @@ export default function SettingsScreen() {
           <Text style={styles.label}>🔒 隐私政策</Text>
           <Text style={styles.chevron}>›</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.row, { borderBottomWidth: 0 }]}
+          onPress={() => navigation.navigate('Guide')}
+        >
+          <Text style={styles.label}>📖 使用说明</Text>
+          <Text style={styles.chevron}>›</Text>
+        </TouchableOpacity>
       </View>
 
       {/* 操作按钮 */}
