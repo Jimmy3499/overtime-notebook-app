@@ -2,7 +2,7 @@
   "expo": {
     "name": "加班小账本",
     "slug": "overtime-app",
-    "version": "3.1.0",
+    "version": "3.1.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.overtime.notebook",
-      "versionCode": 30100,
+      "versionCode": 30101,
       "adaptiveIcon": {
         "backgroundColor": "#1e293b",
         "foregroundImage": "./assets/android-icon-foreground.png",
