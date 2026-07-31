@@ -40,3 +40,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# dev / crash artifacts（本地运行产物，勿提交）
+core.*
+expo-tunnel.log
+*.log

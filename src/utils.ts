@@ -305,6 +305,8 @@ export interface SelectionSummary {
   perDay: SelectedDaySummary[];
   totalHours: number;
   totalPay: number;
+  startTime: string;   // 起始时间（首日最早 normalOffTime，无记录则用默认 18:00）
+  endTime: string;     // 结束时间（末日最晚 actualOffTime，无记录则用默认 20:00）
 }
 
 export function calcSelectionSummary(
@@ -322,5 +324,55 @@ export function calcSelectionSummary(
     });
   const totalHours = perDay.reduce((s, d) => s + d.hours, 0);
   const totalPay = perDay.reduce((s, d) => s + d.pay, 0);
-  return { perDay, totalHours, totalPay };
+
+  // 提示词所需的起止时间：首日最早开始、末日最晚结束；无记录回退默认下班时间
+  const firstDate = perDay.length ? perDay[0].date : '';
+  const lastDate = perDay.length ? perDay[perDay.length - 1].date : '';
+  const firstRecs = records.filter((r) => r.date === firstDate);
+  const lastRecs = records.filter((r) => r.date === lastDate);
+  const startTime = firstRecs.length
+    ? firstRecs.reduce((a, b) => (a.normalOffTime <= b.normalOffTime ? a : b)).normalOffTime
+    : '18:00';
+  const endTime = lastRecs.length
+    ? lastRecs.reduce((a, b) => (a.actualOffTime >= b.actualOffTime ? a : b)).actualOffTime
+    : '20:00';
+
+  return { perDay, totalHours, totalPay, startTime, endTime };
+}
+
+
+/**
+ * 把 YYYY-MM-DD 格式化成提示词用的「2026.7.27」（点分隔、月日不补零）。
+ */
+export function formatDotDate(dateStr: string): string {
+  const parts = dateStr.split('-');
+  if (parts.length < 3) return dateStr;
+  const [y, m, d] = parts;
+  return `${y}.${parseInt(m, 10)}.${parseInt(d, 10)}`;
+}
+
+/**
+ * 把小时数格式化为提示词用的小数形式：7.5 -> "7.5"，2 -> "2"。
+ */
+export function formatDecimalHours(hours: number): string {
+  if (!isFinite(hours)) return '0';
+  const rounded = Math.round(hours * 100) / 100;
+  return Number.isInteger(rounded) ? String(rounded) : String(rounded);
+}
+
+/**
+ * 生成「加班单提示词」文本，供用户复制到其它地方。
+ * 形如：帮本人生成一个加班单，时间是2026.7.27的17:30～2026.7.30的19:00，共计时长7.5小时
+ */
+export function buildOvertimePrompt(opts: {
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+  hours: number;
+}): string {
+  const sd = formatDotDate(opts.startDate);
+  const ed = formatDotDate(opts.endDate);
+  const h = formatDecimalHours(opts.hours);
+  return `帮本人生成一个加班单，时间是${sd}的${opts.startTime}～${ed}的${opts.endTime}，共计时长${h}小时`;
 }

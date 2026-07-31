@@ -1,13 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import {
   StyleSheet, Text, View, TouchableOpacity, FlatList, Modal, Pressable, ScrollView,
+  Alert,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { useNavigation } from '@react-navigation/native';
 import { useApp } from '../AppContext';
 import { THEME, OVERTIME_TYPE_INFO, RECORD_TYPE_INFO } from '../constants';
 import {
   monthRange, dateListOfMonth, formatDate, formatDuration, formatMoney,
-  dayOfWeek, calcSelectionSummary,
+  dayOfWeek, calcSelectionSummary, buildOvertimePrompt,
 } from '../utils';
 import RecordCard from '../components/RecordCard';
 import type { OvertimeRecord } from '../types';
@@ -25,6 +27,7 @@ export default function CalendarScreen() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [calcVisible, setCalcVisible] = useState(false);
+  const [promptText, setPromptText] = useState(''); // 生成的加班单提示词
 
   const { days } = monthRange(year, month);
   const dates = dateListOfMonth(year, month);
@@ -93,6 +96,26 @@ export default function CalendarScreen() {
   // 在多选模式下切换某日期的选中状态
   const toggleSelect = (d: string) => {
     setSelectedDates(prev => (prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]));
+  };
+
+  // 生成「加班单提示词」并复制到剪贴板
+  const handleGeneratePrompt = async () => {
+    const startD = calcResult.perDay.length ? calcResult.perDay[0].date : '';
+    const endD = calcResult.perDay.length ? calcResult.perDay[calcResult.perDay.length - 1].date : '';
+    const prompt = buildOvertimePrompt({
+      startDate: startD,
+      startTime: calcResult.startTime,
+      endDate: endD,
+      endTime: calcResult.endTime,
+      hours: calcResult.totalHours,
+    });
+    setPromptText(prompt);
+    try {
+      await Clipboard.setStringAsync(prompt);
+      Alert.alert('已复制', '加班单提示词已复制到剪贴板，可粘贴到其它应用。');
+    } catch {
+      // 复制失败也保留文本，用户可长按手动复制
+    }
   };
 
   // 所选日期的汇总结果（按全部记录类型汇总，复用 utils 纯函数）
@@ -398,6 +421,19 @@ export default function CalendarScreen() {
               </View>
             </View>
 
+            {/* 生成加班单提示词 */}
+            <TouchableOpacity style={styles.promptBtn} onPress={handleGeneratePrompt}>
+              <Text style={styles.promptBtnText}>📋 生成加班单提示词</Text>
+            </TouchableOpacity>
+            {promptText ? (
+              <View style={styles.promptBox}>
+                <Text style={styles.promptBoxText} selectable>{promptText}</Text>
+                <TouchableOpacity style={styles.promptCopy} onPress={handleGeneratePrompt}>
+                  <Text style={styles.promptCopyText}>再复制一次</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
             <ScrollView style={styles.calcList} contentContainerStyle={{ paddingBottom: 8 }}>
               {calcResult.perDay.length === 0 ? (
                 <Text style={styles.calcEmpty}>未选择日期</Text>
@@ -671,4 +707,23 @@ const styles = StyleSheet.create({
     marginTop: 12, backgroundColor: THEME.primary, borderRadius: 10, paddingVertical: 12, alignItems: 'center',
   },
   calcCloseText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  // 生成加班单提示词
+  promptBtn: {
+    marginTop: 12, backgroundColor: THEME.bg, borderWidth: 1, borderColor: THEME.border,
+    borderRadius: 10, paddingVertical: 11, alignItems: 'center',
+  },
+  promptBtnText: { color: THEME.text, fontSize: 14, fontWeight: '600' },
+  promptBox: {
+    marginTop: 8, backgroundColor: THEME.bg, borderRadius: 10, padding: 12,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: THEME.divider,
+  },
+  promptBoxText: {
+    fontSize: 13, lineHeight: 20, color: THEME.text, fontWeight: '500',
+  },
+  promptCopy: {
+    marginTop: 8, alignSelf: 'flex-end',
+    paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8,
+    backgroundColor: THEME.primary,
+  },
+  promptCopyText: { color: '#fff', fontSize: 12, fontWeight: '500' },
 });

@@ -14,6 +14,9 @@ import {
   calcEndTimeFromDuration,
   calcRecordFields,
   calcSelectionSummary,
+  formatDotDate,
+  formatDecimalHours,
+  buildOvertimePrompt,
 } from './utils';
 
 // 在默认设置基础上构造可控的测试设置
@@ -356,4 +359,58 @@ describe('calcSelectionSummary 日历多选汇总', () => {
     expect(r.perDay[0].count).toBe(2);
     expect(r.perDay[0].hours).toBeCloseTo(3);
   });
+
+  test('起止时间：首日最早开始、末日最晚结束', () => {
+    const records = [
+      { date: '2026-07-02', normalOffTime: '18:00', actualOffTime: '20:00', durationHours: 2, netIncome: 50 },
+      { date: '2026-07-02', normalOffTime: '17:30', actualOffTime: '19:00', durationHours: 1.5, netIncome: 37.5 },
+      { date: '2026-07-05', normalOffTime: '19:00', actualOffTime: '22:00', durationHours: 3, netIncome: 75 },
+    ] as any;
+    const r = calcSelectionSummary(['2026-07-05', '2026-07-02'], records);
+    expect(r.startTime).toBe('17:30'); // 首日最早开始
+    expect(r.endTime).toBe('22:00');   // 末日最晚结束
+  });
+
+  test('无记录时回退默认起止时间', () => {
+    const r = calcSelectionSummary(['2026-07-09'], [] as any);
+    expect(r.startTime).toBe('18:00');
+    expect(r.endTime).toBe('20:00');
+  });
 });
+
+// ============ 提示词生成 formatDotDate / formatDecimalHours / buildOvertimePrompt ============
+describe('提示词生成', () => {
+  test('formatDotDate 点分隔不补零', () => {
+    expect(formatDotDate('2026-07-27')).toBe('2026.7.27');
+    expect(formatDotDate('2026-12-03')).toBe('2026.12.3');
+  });
+
+  test('formatDecimalHours 整数与小数', () => {
+    expect(formatDecimalHours(2)).toBe('2');
+    expect(formatDecimalHours(7.5)).toBe('7.5');
+    expect(formatDecimalHours(1.5)).toBe('1.5');
+  });
+
+  test('buildOvertimePrompt 拼接格式', () => {
+    const p = buildOvertimePrompt({
+      startDate: '2026-07-27',
+      startTime: '17:30',
+      endDate: '2026-07-30',
+      endTime: '19:00',
+      hours: 7.5,
+    });
+    expect(p).toBe('帮本人生成一个加班单，时间是2026.7.27的17:30～2026.7.30的19:00，共计时长7.5小时');
+  });
+
+  test('buildOvertimePrompt 整数时长不显示小数', () => {
+    const p = buildOvertimePrompt({
+      startDate: '2026-07-27',
+      startTime: '18:00',
+      endDate: '2026-07-27',
+      endTime: '20:00',
+      hours: 2,
+    });
+    expect(p).toBe('帮本人生成一个加班单，时间是2026.7.27的18:00～2026.7.27的20:00，共计时长2小时');
+  });
+});
+
