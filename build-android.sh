@@ -60,11 +60,22 @@ echo "[2.6/6] 确保 splash 纯色 logo 存在（expo-splash-screen 主题会引
 SPLASH_LOGO=android/app/src/main/res/drawable/splashscreen_logo.png
 if [ ! -f "$SPLASH_LOGO" ]; then
   mkdir -p android/app/src/main/res/drawable
+  # 纯 Python（stdlib zlib+struct）生成纯色 PNG，避免依赖 Pillow（CI 默认未安装）
   python3 - <<'PY'
-from PIL import Image
-# 与启动页背景同色 #b45309，视觉上仍是纯色启动页
-Image.new("RGB", (512, 512), (0xb4, 0x53, 0x09)).save("android/app/src/main/res/drawable/splashscreen_logo.png")
-print("已生成纯色 splashscreen_logo.png")
+import zlib, struct
+def _chunk(tag, data):
+    c = tag + data
+    return struct.pack(">I", len(data)) + c + struct.pack(">I", zlib.crc32(c) & 0xffffffff)
+w = h = 512
+col = (0xb4, 0x53, 0x09)  # 与启动页背景同色 #b45309
+raw = b"".join(b"\x00" + bytes(col) * w for _ in range(h))
+png = (b"\x89PNG\r\n\x1a\n"
+       + _chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0))
+       + _chunk(b"IDAT", zlib.compress(raw, 9))
+       + _chunk(b"IEND", b""))
+with open("android/app/src/main/res/drawable/splashscreen_logo.png", "wb") as f:
+    f.write(png)
+print("已生成纯色 splashscreen_logo.png（无需 Pillow）")
 PY
 fi
 
