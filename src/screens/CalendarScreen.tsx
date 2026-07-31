@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   StyleSheet, Text, View, TouchableOpacity, FlatList, Modal, Pressable, ScrollView,
-  Alert,
+  Alert, TextInput,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useNavigation } from '@react-navigation/native';
@@ -28,6 +28,7 @@ export default function CalendarScreen() {
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [calcVisible, setCalcVisible] = useState(false);
   const [promptText, setPromptText] = useState(''); // 生成的加班单提示词
+  const [customText, setCustomText] = useState(''); // 提示词自定义后缀（可选）
 
   const { days } = monthRange(year, month);
   const dates = dateListOfMonth(year, month);
@@ -108,6 +109,7 @@ export default function CalendarScreen() {
       endDate: endD,
       endTime: calcResult.endTime,
       hours: calcResult.totalHours,
+      customText,
     });
     setPromptText(prompt);
     try {
@@ -421,6 +423,20 @@ export default function CalendarScreen() {
               </View>
             </View>
 
+            {/* 提示词自定义后缀（可选） */}
+            <View style={styles.promptInputWrap}>
+              <Text style={styles.promptInputLabel}>自定义内容（可选，追加在提示词末尾）</Text>
+              <TextInput
+                style={styles.promptInput}
+                value={customText}
+                onChangeText={setCustomText}
+                placeholder="例如：申请理由按照我在这段时间的工作内容"
+                placeholderTextColor={THEME.textMute}
+                multiline
+                maxLength={200}
+              />
+            </View>
+
             {/* 生成加班单提示词 */}
             <TouchableOpacity style={styles.promptBtn} onPress={handleGeneratePrompt}>
               <Text style={styles.promptBtnText}>📋 生成加班单提示词</Text>
@@ -726,4 +742,23 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.primary,
   },
   promptCopyText: { color: '#fff', fontSize: 12, fontWeight: '500' },
+  // 提示词自定义输入
+  promptInputWrap: {
+    marginTop: 12,
+  },
+  promptInputLabel: {
+    fontSize: 12, color: THEME.textSub, marginBottom: 6,
+  },
+  promptInput: {
+    backgroundColor: THEME.bg,
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: THEME.border,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: THEME.text,
+    minHeight: 44,
+    textAlignVertical: 'top',
+  },
 });

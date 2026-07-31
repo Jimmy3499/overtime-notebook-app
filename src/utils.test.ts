@@ -412,5 +412,47 @@ describe('提示词生成', () => {
     });
     expect(p).toBe('帮本人生成一个加班单，时间是2026.7.27的18:00～2026.7.27的20:00，共计时长2小时');
   });
+
+  test('buildOvertimePrompt 自定义内容追加在末尾并自动补逗号', () => {
+    const p = buildOvertimePrompt({
+      startDate: '2026-07-27',
+      startTime: '17:30',
+      endDate: '2026-07-30',
+      endTime: '19:00',
+      hours: 7.5,
+      customText: '申请理由按照我在这段时间的工作内容',
+    });
+    expect(p).toBe(
+      '帮本人生成一个加班单，时间是2026.7.27的17:30～2026.7.30的19:00，共计时长7.5小时，申请理由按照我在这段时间的工作内容',
+    );
+  });
+
+  test('buildOvertimePrompt 自定义内容已带标点则不重复补逗号', () => {
+    const p = buildOvertimePrompt({
+      startDate: '2026-07-27',
+      startTime: '17:30',
+      endDate: '2026-07-30',
+      endTime: '19:00',
+      hours: 7.5,
+      customText: '，含项目联调与版本发布',
+    });
+    expect(p).toBe(
+      '帮本人生成一个加班单，时间是2026.7.27的17:30～2026.7.30的19:00，共计时长7.5小时，含项目联调与版本发布',
+    );
+  });
+
+  test('buildOvertimePrompt 自定义内容为空/纯空白时仅返回固定前半句', () => {
+    const p = buildOvertimePrompt({
+      startDate: '2026-07-27',
+      startTime: '17:30',
+      endDate: '2026-07-30',
+      endTime: '19:00',
+      hours: 7.5,
+      customText: '   ',
+    });
+    expect(p).toBe(
+      '帮本人生成一个加班单，时间是2026.7.27的17:30～2026.7.30的19:00，共计时长7.5小时',
+    );
+  });
 });
 

@@ -363,6 +363,7 @@ export function formatDecimalHours(hours: number): string {
 /**
  * 生成「加班单提示词」文本，供用户复制到其它地方。
  * 形如：帮本人生成一个加班单，时间是2026.7.27的17:30～2026.7.30的19:00，共计时长7.5小时
+ * 可选的 customText 会追加在固定前半句之后（用户自行补充的内容，如申请理由）。
  */
 export function buildOvertimePrompt(opts: {
   startDate: string;
@@ -370,9 +371,22 @@ export function buildOvertimePrompt(opts: {
   endDate: string;
   endTime: string;
   hours: number;
+  customText?: string;
 }): string {
   const sd = formatDotDate(opts.startDate);
   const ed = formatDotDate(opts.endDate);
   const h = formatDecimalHours(opts.hours);
-  return `帮本人生成一个加班单，时间是${sd}的${opts.startTime}～${ed}的${opts.endTime}，共计时长${h}小时`;
+  const base = `帮本人生成一个加班单，时间是${sd}的${opts.startTime}～${ed}的${opts.endTime}，共计时长${h}小时`;
+  return appendCustomText(base, opts.customText);
+}
+
+/**
+ * 固定前半句，仅在末尾追加用户自定义内容。
+ * 若自定义内容已以句读（，。；：等）开头，则不再补逗号，避免重复标点。
+ */
+function appendCustomText(base: string, customText?: string): string {
+  const s = (customText ?? '').trim();
+  if (!s) return base;
+  const needsSep = !/^[，,。.；;：:、\n\r\t]/.test(s);
+  return needsSep ? `${base}，${s}` : `${base}${s}`;
 }
