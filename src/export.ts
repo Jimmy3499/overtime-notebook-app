@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
@@ -5,6 +6,43 @@ import type { OvertimeRecord } from './types';
 import { OVERTIME_TYPE_INFO, RECORD_TYPE_INFO } from './constants';
 import { formatDuration } from './utils';
 
+// ---------- 网页端（浏览器）辅助：用原生 DOM API 实现下载/读取 ----------
+// 用 globalThis as any，避免 RN 工程无 DOM 类型时编译报错。
+function downloadTextWeb(filename: string, content: string, mime: string): void {
+  const w = globalThis as any;
+  const blob = new w.Blob([content], { type: mime });
+  const url = w.URL.createObjectURL(blob);
+  const a = w.document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  w.document.body.appendChild(a);
+  a.click();
+  w.document.body.removeChild(a);
+  setTimeout(() => w.URL.revokeObjectURL(url), 1000);
+}
+
+function readFileTextWeb(): Promise<string> {
+  const w = globalThis as any;
+  return new Promise((resolve, reject) => {
+    const input = w.document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json,.json';
+    input.onchange = () => {
+      const f = input.files && input.files[0];
+      if (!f) {
+        reject(new Error('未选择文件'));
+        return;
+      }
+      const reader = new w.FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error || new Error('读取失败'));
+      reader.readAsText(f);
+    };
+    input.click();
+  });
+}
+
+// ---------- 原生端（Android）辅助 ----------
 // 写入文本文件并返回 URI
 function writeTextFile(name: string, content: string): string {
   const file = new File(Paths.cache, name);
@@ -55,6 +93,11 @@ export async function exportRecordsAsCSV(records: OvertimeRecord[]): Promise<voi
   });
 
   const csv = '\uFEFF' + [header.map(csvEscape).join(','), ...rows].join('\n');
+
+  if (Platform.OS === 'web') {
+    downloadTextWeb(`overtime_records_${Date.now()}.csv`, csv, 'text/csv;charset=utf-8');
+    return;
+  }
   const uri = writeTextFile(`overtime_records_${Date.now()}.csv`, csv);
   await Sharing.shareAsync(uri, {
     mimeType: 'text/csv',
@@ -71,6 +114,11 @@ export async function exportBackup(data: { records: OvertimeRecord[]; settings: 
     records: data.records,
     settings: data.settings,
   }, null, 2);
+
+  if (Platform.OS === 'web') {
+    downloadTextWeb(`overtime_backup_${Date.now()}.json`, json, 'application/json');
+    return;
+  }
   const uri = writeTextFile(`overtime_backup_${Date.now()}.json`, json);
   await Sharing.shareAsync(uri, {
     mimeType: 'application/json',
@@ -81,6 +129,20 @@ export async function exportBackup(data: { records: OvertimeRecord[]; settings: 
 
 // 从 JSON 备份导入
 export async function importBackup(): Promise<{ records: OvertimeRecord[]; settings?: unknown } | null> {
+  if (Platform.OS === 'web') {
+    try {
+      const content = await readFileTextWeb();
+      const parsed = JSON.parse(content);
+      if (!parsed || !Array.isArray(parsed.records)) {
+        throw new Error('备份文件格式不正确');
+      }
+      return { records: parsed.records as OvertimeRecord[], settings: parsed.settings };
+    } catch (e) {
+      if (e instanceof Error && e.message === '未选择文件') return null;
+      throw e;
+    }
+  }
+
   const result = await DocumentPicker.getDocumentAsync({
     type: 'application/json',
     copyToCacheDirectory: true,
@@ -133,6 +195,11 @@ export function buildLedgerText(records: OvertimeRecord[]): string {
 // 导出台账为 txt 并分享
 export async function exportLedger(records: OvertimeRecord[]): Promise<void> {
   const text = buildLedgerText(records);
+
+  if (Platform.OS === 'web') {
+    downloadTextWeb(`overtime_ledger_${Date.now()}.txt`, text, 'text/plain;charset=utf-8');
+    return;
+  }
   const uri = writeTextFile(`overtime_ledger_${Date.now()}.txt`, text);
   await Sharing.shareAsync(uri, {
     mimeType: 'text/plain',

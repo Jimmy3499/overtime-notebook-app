@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>隐私政策 · 加班小账本</title>
+  <meta name="theme-color" content="#b45309" />
+  <style>
+    :root { --primary:#b45309; --brown:#7c3f0a; --bg:#fff7ed; --card:#ffffff; --text:#1f2937; --mute:#6b7280; --border:#fde2c4; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text);
+           font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; line-height:1.8; }
+    .wrap { max-width:720px; margin:0 auto; padding:24px 18px 56px; }
+    .back { display:inline-block; color:var(--primary); text-decoration:none; font-size:14px; margin-bottom:10px; }
+    h1 { font-size:24px; margin:6px 0 4px; }
+    .meta { color:var(--mute); font-size:13px; margin:0 0 18px; }
+    .meta b { color:var(--brown); }
+    h2 { font-size:18px; color:var(--brown); margin:26px 0 8px; border-left:4px solid var(--primary); padding-left:10px; }
+    p { margin:8px 0; }
+    ul, ol { padding-left:22px; }
+    li { margin:4px 0; }
+    table { width:100%; border-collapse:collapse; margin:12px 0; font-size:14px; background:var(--card); }
+    th, td { border:1px solid var(--border); padding:8px 10px; text-align:left; }
+    th { background:#fff3e3; }
+    blockquote { margin:16px 0; padding:12px 16px; background:var(--card); border:1px solid var(--border);
+                 border-left:4px solid var(--primary); border-radius:10px; color:var(--brown); font-weight:600; }
+    hr { border:none; border-top:1px solid var(--border); margin:24px 0; }
+    strong { color:var(--text); }
+    .footer { text-align:center; color:var(--mute); font-size:12px; margin-top:34px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="./index.html">← 返回首页</a>
+    <h1>隐私政策</h1>
+    <p class="meta">
+      <b>适用产品</b>：加班小账本（Overtime Notebook）Android 客户端及网页版<br/>
+      <b>最后更新</b>：2026 年 7 月 31 日&nbsp;&nbsp;·&nbsp;&nbsp;<b>版本</b>：v3.1.0
+    </p>
+
+    <p>感谢你使用「加班小账本」。我们非常重视你的隐私。本政策用尽可能直白的语言说明：这款应用如何处理你的数据。</p>
+
+    <hr/>
+
+    <h2>一、我们收集哪些信息</h2>
+    <p><strong>简短结论：我们不收集你的任何个人信息。</strong></p>
+    <p>「加班小账本」是一款<strong>纯本地</strong>的记账工具。你录入的所有内容——加班记录、时长、工资/补贴、设置项、调休安排、标记的日期等——都只保存在你<strong>自己的设备</strong>上（Android 使用 AsyncStorage，网页版使用浏览器本地存储）。</p>
+    <p>我们不会要求你注册账号，不会采集你的姓名、手机号、地理位置、通讯录、相册等任何个人信息，也不会在后台悄悄上传这些数据。</p>
+
+    <h2>二、数据存储位置</h2>
+    <table>
+      <thead><tr><th>数据类型</th><th>存储位置</th><th>是否离开设备</th></tr></thead>
+      <tbody>
+        <tr><td>加班 / 调休记录</td><td>设备本地存储</td><td>否</td></tr>
+        <tr><td>应用设置（计薪天数、时薪等）</td><td>设备本地存储</td><td>否</td></tr>
+        <tr><td>节假日缓存</td><td>设备本地存储</td><td>否</td></tr>
+      </tbody>
+    </table>
+    <p>数据存储由操作系统 / 浏览器管理，随应用卸载或「清除数据」而删除。我们不提供云端同步，因此<strong>你的数据不会出现在任何服务器上</strong>。</p>
+
+    <h2>三、网络访问说明</h2>
+    <p>应用唯一的联网行为，是<strong>拉取公开的中国法定节假日日历</strong>，以便自动判断休息日：</p>
+    <ul>
+      <li>接口：<code>https://timor.tech/api/holiday/year/{年份}</code></li>
+      <li>方式：仅发起 GET 请求，用于获取公开节假日信息</li>
+      <li>发送内容：<strong>不发送</strong>任何个人信息或设备标识</li>
+      <li>用途：离线识别节假日、辅助统计</li>
+      <li>说明：该公开接口偶尔会不可达，此时应用自动改用<strong>内置的节假日数据</strong>（覆盖 2025–2026 年），节假日识别功能不受影响。</li>
+    </ul>
+    <p>除此之外，应用不会在运行时发起任何其他网络请求，也无任何埋点、统计或广告请求。</p>
+
+    <h2>四、第三方 SDK 与共享</h2>
+    <ul>
+      <li>本应用<strong>未集成</strong>任何第三方分析、广告、崩溃统计或用户行为追踪 SDK。</li>
+      <li>我们<strong>不会</strong>将你的数据出售、出租或共享给任何第三方。</li>
+      <li>节假日数据来自第三方公开接口 timor.tech，其可用性、准确性由该服务提供方负责，本应用按「现状」提供，不对其内容作担保。</li>
+    </ul>
+
+    <h2>五、儿童隐私</h2>
+    <p>本应用不面向未成年人设计，也不主动收集任何年龄用户的个人信息。若你是监护人并发现未成年人使用了本应用，数据仅留存于其自有设备，可通过卸载应用或清除数据移除。</p>
+
+    <h2>六、你的权利与数据管理</h2>
+    <p>由于数据完全保存在本地，你拥有完全控制权：</p>
+    <ul>
+      <li><strong>查看 / 修改 / 删除单条记录</strong>：在应用内对应页面操作。</li>
+      <li><strong>彻底删除全部数据</strong>：在系统设置中「清除应用数据」或直接卸载应用。</li>
+      <li><strong>停止使用</strong>：卸载应用即可，无需通知我们。</li>
+    </ul>
+
+    <h2>七、政策的变更</h2>
+    <p>如未来版本引入联网同步、账号体系或第三方服务，我们会在此政策中显著更新并说明变化，必要时征求你的同意。</p>
+
+    <h2>八、联系我们</h2>
+    <p>如对本隐私政策有疑问，可通过邮箱 <a href="mailto:Jimmydwws@163.com">Jimmydwws@163.com</a> 与我们联系。</p>
+
+    <blockquote>一句话总结：<strong>你的加班数据只属于你自己的设备，我们不看、不收、不上传。</strong></blockquote>
+
+    <p class="footer">加班小账本 v3.1.0 · 纯本地工具</p>
+  </div>
+</body>
+</html>
