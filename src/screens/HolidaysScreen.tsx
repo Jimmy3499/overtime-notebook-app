@@ -44,7 +44,7 @@ export default function HolidaysScreen() {
       setSyncMeta({
         year: new Date().getFullYear(),
         at: Date.now(),
-        source: 'timor.tech',
+        source: 'jsdelivr',
       });
       Alert.alert(
         '同步完成',

@@ -61,7 +61,7 @@
     <h2>三、网络访问说明</h2>
     <p>应用唯一的联网行为，是<strong>拉取公开的中国法定节假日日历</strong>，以便自动判断休息日：</p>
     <ul>
-      <li>接口：<code>https://timor.tech/api/holiday/year/{年份}</code></li>
+      <li>接口：<code>https://cdn.jsdelivr.net/gh/Jimmy3499/overtime-notebook-app@master/holidays.json</code>（项目自带节假日数据，经 jsDelivr CDN 分发）</li>
       <li>方式：仅发起 GET 请求，用于获取公开节假日信息</li>
       <li>发送内容：<strong>不发送</strong>任何个人信息或设备标识</li>
       <li>用途：离线识别节假日、辅助统计</li>
@@ -73,7 +73,7 @@
     <ul>
       <li>本应用<strong>未集成</strong>任何第三方分析、广告、崩溃统计或用户行为追踪 SDK。</li>
       <li>我们<strong>不会</strong>将你的数据出售、出租或共享给任何第三方。</li>
-      <li>节假日数据来自第三方公开接口 timor.tech，其可用性、准确性由该服务提供方负责，本应用按「现状」提供，不对其内容作担保。</li>
+      <li>节假日数据来自项目自带、经 jsDelivr CDN 分发的公开节假日文件（holidays.json），其准确性以国务院办公厅每年公布的官方安排为准，应用按「现状」提供，不对其内容作担保。</li>
     </ul>
 
     <h2>五、儿童隐私</h2>
