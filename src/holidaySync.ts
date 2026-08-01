@@ -1,19 +1,19 @@
 import type { HolidayConfig } from './types';
 
-// 数据来源：timor.tech 免费节假日接口（无需密钥），返回当年法定节假日与调休补班
-const API_BASE = 'https://timor.tech/api/holiday/year';
+// 数据来源：项目自带节假日数据，经 jsDelivr CDN 分发（国内可达、可控、每年更新）。
+// 仓库根目录 holidays.json 由作者每年初更新；接口不可达时回退内置兜底数据（见文末 FALLBACK_HOLIDAYS）。
+const HOLIDAYS_JSON_URL =
+  'https://cdn.jsdelivr.net/gh/Jimmy3499/overtime-notebook-app@master/holidays.json';
 
-// 接口单日结构（仅取需要的字段）
-interface TimorDay {
-  holiday: boolean;   // true=休息日, false=补班(要上班)
+// holidays.json 格式
+interface HolidayJsonEntry {
+  date: string; // YYYY-MM-DD
   name: string;
-  wage: number;       // 3=法定节假日, 1=调休补班, 2=调休休息日
-  date?: string;      // 完整日期 YYYY-MM-DD（部分条目带）
+  type: 'holiday' | 'makeup';
 }
-
-interface TimorYearResponse {
-  code: number;
-  holiday: Record<string, TimorDay> | null; // key 为 MM-DD
+interface HolidayJson {
+  updated?: string;
+  years: Record<string, HolidayJsonEntry[]>; // key 为年份字符串，如 "2026"
 }
 
 // 默认同步年份：今年 + 前两年
@@ -22,57 +22,37 @@ export function defaultSyncYears(): number[] {
   return [y, y - 1, y - 2];
 }
 
-// 把单个年份的官方数据映射成 HolidayConfig[]
-// 规则：wage:3 -> 法定假日(holiday)；wage:1 -> 调休补班(makeup)；其余(含 wage:2 调休休息日)跳过
-export function mapTimorYear(json: TimorYearResponse, year: number): HolidayConfig[] {
-  const out: HolidayConfig[] = [];
-  const days = json?.holiday;
-  if (!days) return out;
-  for (const key of Object.keys(days)) {
-    const d = days[key];
-    if (!d) continue;
-    let type: HolidayConfig['type'] | null = null;
-    if (d.wage === 3) type = 'holiday';
-    else if (d.wage === 1) type = 'makeup';
-    else continue;
-    const date =
-      d.date && /^\d{4}-\d{2}-\d{2}$/.test(d.date) ? d.date : `${year}-${key}`;
-    out.push({ date, name: d.name, type });
-  }
-  return out;
+// 把节假日 JSON 中指定年份映射成 HolidayConfig[]
+function mapHolidaysJson(json: HolidayJson, year: number): HolidayConfig[] {
+  const list = json?.years?.[String(year)] || [];
+  return list.map((e) => ({ date: e.date, name: e.name, type: e.type }));
 }
 
-// 拉取某一年（带超时与中断）
-export async function fetchYearHolidays(
-  year: number,
-  timeoutMs = 10000,
-): Promise<HolidayConfig[]> {
+// 拉取节假日 JSON（单次请求，带超时）；返回近三年合并后的数据
+export async function fetchAllHolidays(timeoutMs = 10000): Promise<HolidayConfig[]> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(`${API_BASE}/${year}`, { signal: controller.signal });
+    const res = await fetch(HOLIDAYS_JSON_URL, { signal: controller.signal });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = (await res.json()) as TimorYearResponse;
-    if (json.code !== 0) throw new Error(`接口返回 code=${json.code}`);
-    return mapTimorYear(json, year);
+    const json = (await res.json()) as HolidayJson;
+    const out: HolidayConfig[] = [];
+    for (const y of defaultSyncYears()) out.push(...mapHolidaysJson(json, y));
+    return out;
   } finally {
     clearTimeout(timer);
   }
 }
 
-// 并发拉取多年，按日期去重（同年同日取其一）
+// 拉取多年（去重），仅保留请求年份范围内的日期
 export async function fetchHolidaysForYears(
   years: number[],
 ): Promise<HolidayConfig[]> {
-  const results = await Promise.allSettled(
-    years.map((y) => fetchYearHolidays(y)),
-  );
+  const all = await fetchAllHolidays();
   const byDate = new Map<string, HolidayConfig>();
-  for (const r of results) {
-    if (r.status !== 'fulfilled') continue;
-    for (const h of r.value) byDate.set(h.date, h);
-  }
-  return [...byDate.values()];
+  for (const h of all) byDate.set(h.date, h);
+  const wanted = new Set(years.map(String));
+  return [...byDate.values()].filter((h) => wanted.has(h.date.slice(0, 4)));
 }
 
 export interface MergeResult {
@@ -105,9 +85,9 @@ export function mergeHolidays(
 }
 
 // ========== 内置兜底节假日 ==========
-// 说明：timor.tech 接口现已被 Cloudflare 拦截，App 内联网同步大概率失败。
-// 因此以内置的国务院官方安排作为基准数据，保证离线也能正确识别节假日 / 调休补班。
-// 每年初更新一次即可（覆盖当年及前一年）。
+// 说明：线上源为项目自带 holidays.json（经 jsDelivr 分发）。若联网拉取失败，
+// 则以内置的国务院官方安排作为基准数据，保证离线也能正确识别节假日 / 调休补班。
+// 每年初随 holidays.json 更新一次即可（覆盖当年及前一年）。
 
 // 生成 [start, end] 闭区间内的所有 YYYY-MM-DD
 function daterange(start: string, end: string): string[] {

@@ -224,8 +224,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const record: OvertimeRecord = {
       id: genId(),
       date: input.date,
-      normalOffTime: input.normalOffTime,
-      actualOffTime: input.actualOffTime,
+      normalOffTime: fields.startTime,
+      actualOffTime: fields.endTime,
       crossDay: input.crossDay,
       type: input.type,
       reason: input.reason,
@@ -253,8 +253,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const updated: OvertimeRecord = {
       ...existing,
       date: input.date,
-      normalOffTime: input.normalOffTime,
-      actualOffTime: input.actualOffTime,
+      normalOffTime: fields.startTime,
+      actualOffTime: fields.endTime,
       crossDay: input.crossDay,
       type: input.type,
       reason: input.reason,
@@ -298,6 +298,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const record: OvertimeRecord = {
       id: genId(),
       ...input,
+      normalOffTime: newRecord.startTime,
+      actualOffTime: newRecord.endTime,
       durationHours: newRecord.durationHours,
       pay: newRecord.pay,
       totalIncome: newRecord.totalIncome,
@@ -335,7 +337,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await saveHolidaySyncMeta({
       year: new Date().getFullYear(),
       at: Date.now(),
-      source: 'timor.tech',
+      source: 'jsdelivr',
     });
     return { added, updated, kept };
   }, [state.holidays, updateHolidays]);
@@ -352,7 +354,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (!official.length) return;
         const { merged } = mergeHolidays(official, state.holidays);
         updateHolidays(merged);
-        await saveHolidaySyncMeta({ year: y, at: Date.now(), source: 'timor.tech' });
+        await saveHolidaySyncMeta({ year: y, at: Date.now(), source: 'jsdelivr' });
       } catch {
         // 静默兜底，网络异常不阻塞启动
       }

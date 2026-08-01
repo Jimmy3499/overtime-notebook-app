@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
   StyleSheet, Text, View, ScrollView, TextInput, Switch, TouchableOpacity, Alert,
+  Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useApp } from '../AppContext';
-import { DEFAULT_SETTINGS, OVERTIME_TYPE_INFO, THEME, APP_VERSION } from '../constants';
+import { DEFAULT_SETTINGS, OVERTIME_TYPE_INFO, THEME } from '../constants';
 import { calcHourlyWageFromSalary, formatMoney } from '../utils';
 import { exportRecordsAsCSV, exportLedger, exportBackup, importBackup, buildLedgerText } from '../export';
 import type { Settings } from '../types';
@@ -31,6 +32,7 @@ export default function SettingsScreen() {
       'weekdayRestMinutes', 'weekendRestMinutes',
       'roundToHalfHour', 'roundDown',
       'lateDeductionEnabled', 'lateDeductionPerHour', 'lateRoundToHalfHour', 'lateRoundDown',
+      'overtimeRoundToHalfHour', 'overtimeRoundDown',
     ];
     let needRecalc = false;
     for (const key of salaryFields) {
@@ -229,6 +231,37 @@ export default function SettingsScreen() {
             />
           </View>
         ))}
+      </View>
+
+      {/* 加班时间取整 */}
+      <Text style={styles.sectionTitle}>加班时间取整</Text>
+      <View style={styles.card}>
+        <View style={styles.switchRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.label}>起止时间按 0.5 小时取整</Text>
+            <Text style={styles.subLabel}>开启后，加班 / 请假的开始、结束时间会按 30 分钟对齐</Text>
+          </View>
+          <Switch
+            value={form.overtimeRoundToHalfHour}
+            onValueChange={v => setField('overtimeRoundToHalfHour', v)}
+            trackColor={{ false: THEME.border, true: THEME.primary }}
+          />
+        </View>
+        {form.overtimeRoundToHalfHour && (
+          <View style={styles.switchRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>取整方向</Text>
+              <Text style={styles.subLabel}>
+                {form.overtimeRoundDown ? '向下取整（如 8:25 → 8:00）' : '向上取整（如 8:25 → 8:30）'}
+              </Text>
+            </View>
+            <Switch
+              value={form.overtimeRoundDown}
+              onValueChange={v => setField('overtimeRoundDown', v)}
+              trackColor={{ false: THEME.border, true: THEME.primary }}
+            />
+          </View>
+        )}
       </View>
 
       {/* 上班时间设置（用于请假/迟到计算） */}
@@ -432,6 +465,21 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* 应用下载 / 更新 */}
+      <Text style={styles.sectionTitle}>应用下载 / 更新</Text>
+      <View style={styles.card}>
+        <TouchableOpacity
+          style={styles.row}
+          onPress={() => {
+            const url = 'https://github.com/Jimmy3499/overtime-notebook-app/releases/latest';
+            Linking.openURL(url).catch(e => Alert.alert('打开失败', String(e)));
+          }}
+        >
+          <Text style={styles.label}>⬇️ 下载 / 更新安装包（APK）</Text>
+          <Text style={styles.chevron}>›</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* 操作按钮 */}
       <View style={styles.actions}>
         <TouchableOpacity
@@ -446,11 +494,6 @@ export default function SettingsScreen() {
         <TouchableOpacity style={[styles.btn, styles.btnSecondary]} onPress={handleReset}>
           <Text style={[styles.btnText, styles.btnSecondaryText]}>恢复默认</Text>
         </TouchableOpacity>
-      </View>
-      <View style={{ alignItems: 'center', paddingVertical: 18 }}>
-        <Text style={{ fontSize: 12, color: THEME.textMute }}>
-          加班记事本 v{APP_VERSION}
-        </Text>
       </View>
     </ScrollView>
   );

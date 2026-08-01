@@ -51,6 +51,18 @@ export function roundToHalfHour(hours: number, roundDown = true): number {
   return halfHours / 2;
 }
 
+// 时刻按 0.5 小时（30 分钟）取整，返回 HH:mm
+// roundDown=false → 向上取整(ceil)：如 8:25 → 8:30
+// roundDown=true  → 向下取整(floor)：如 8:25 → 8:00
+// 边界：向上取整封顶到 23:30，避免跨到次日 00:00
+export function roundTimeToHalfHour(time: string, roundDown = true): string {
+  const m = timeToMinutes(time);
+  let r = roundDown ? Math.floor(m / 30) * 30 : Math.ceil(m / 30) * 30;
+  if (r < 0) r = 0;
+  if (r > 1410) r = 1410; // 23:30
+  return minutesToTime(r);
+}
+
 // 日期→星期几（0=周日，1=周一..6=周六）
 export function dayOfWeek(dateStr: string): number {
   return new Date(dateStr + 'T00:00:00').getDay();
@@ -238,6 +250,15 @@ export function calcRecordFields(input: RecordInput, settings: Settings): CalcFi
   const isLeave = input.recordType === 'leave';
   const isLate = input.recordType === 'late';
 
+  // 加班/请假：按设置对起止时刻做 0.5h 取整（迟到使用独立的迟到取整，不在此处理）
+  const roundOn = settings.overtimeRoundToHalfHour && (input.recordType === 'overtime' || input.recordType === 'leave');
+  const startTime = roundOn
+    ? roundTimeToHalfHour(input.normalOffTime, settings.overtimeRoundDown)
+    : input.normalOffTime;
+  const endTime = roundOn
+    ? roundTimeToHalfHour(input.actualOffTime, settings.overtimeRoundDown)
+    : input.actualOffTime;
+
   if (isLate) {
     const rawLateHours = calcLateDurationHours(input.normalOffTime, input.actualOffTime);
     const deduction = calcLateDeduction(rawLateHours, settings);
@@ -249,6 +270,8 @@ export function calcRecordFields(input: RecordInput, settings: Settings): CalcFi
       totalIncome: 0,
       deduction: +deduction.toFixed(2),
       netIncome: deduction === 0 ? 0 : -deduction,
+      startTime,
+      endTime,
     };
   }
 
@@ -268,10 +291,12 @@ export function calcRecordFields(input: RecordInput, settings: Settings): CalcFi
       totalIncome,
       deduction: 0,
       netIncome: totalIncome,
+      startTime,
+      endTime,
     };
   }
 
-  const rawHours = calcRawDurationHours(input.normalOffTime, input.actualOffTime, input.crossDay);
+  const rawHours = calcRawDurationHours(startTime, endTime, input.crossDay);
   const effective = isLeave
     ? rawHours
     : calcEffectiveDuration(rawHours, settings, input.type);
@@ -285,6 +310,8 @@ export function calcRecordFields(input: RecordInput, settings: Settings): CalcFi
     totalIncome,
     deduction: 0,
     netIncome: totalIncome,
+    startTime,
+    endTime,
   };
 }
 
