@@ -40,5 +40,11 @@ cp -f "$DIST/metadata.json" "$APP_DIR/metadata.json"
 NEW_JS="$(ls "$DIST"/_expo/static/js/web/*.js | xargs -n1 basename)"
 sed -i -E "s|index-[a-f0-9]+\.js|$NEW_JS|g" "$APP_DIR/index.html"
 
+# GitHub Pages 默认会用 Jekyll 处理站点，而 Jekyll 会丢弃以下划线 _ 开头的
+# 目录（如 Expo 导出的 _expo/），导致主包 JS 404、网页版打不开。
+# 放置 .nojekyll 可关闭 Jekyll，让 _expo / assets 等静态文件原样提供。
+touch "$REPO_ROOT/site/.nojekyll"
+
 echo "✅ 4/4  完成。site/ 已就绪，可直接部署。"
 echo "   主包：$NEW_JS"
+echo "   已写入 site/.nojekyll（关闭 GitHub Pages 的 Jekyll，避免 _expo 被忽略）"
