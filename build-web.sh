@@ -45,6 +45,13 @@ sed -i -E "s|index-[a-f0-9]+\.js|$NEW_JS|g" "$APP_DIR/index.html"
 # 放置 .nojekyll 可关闭 Jekyll，让 _expo / assets 等静态文件原样提供。
 touch "$REPO_ROOT/site/.nojekyll"
 
+# 每次构建给 Service Worker 的缓存名注入唯一时间戳，让旧缓存自动失效。
+# 之前用固定缓存名 + 缓存优先（cache-first），导致部署新版本后用户浏览器
+# 仍长期加载被缓存的旧主包（「网页版不是最新的」根因之一）。
+CACHE_VER="$(date +%s)"
+sed -i -E "s/(overtime-notebook-)[0-9A-Za-z_-]*/\1$CACHE_VER/" "$APP_DIR/sw.js"
+
 echo "✅ 4/4  完成。site/ 已就绪，可直接部署。"
 echo "   主包：$NEW_JS"
 echo "   已写入 site/.nojekyll（关闭 GitHub Pages 的 Jekyll，避免 _expo 被忽略）"
+echo "   SW 缓存名已注入唯一版本：overtime-notebook-$CACHE_VER"
