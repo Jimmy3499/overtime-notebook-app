@@ -27,8 +27,14 @@ git add -A
 git commit -q -m "deploy web v3.2.0 (PWA)"
 
 echo "🚀 推送到 origin/gh-pages ..."
-echo "   （若提示输入用户名/密码，密码处请填 GitHub Personal Access Token）"
-git push --force "https://github.com/Jimmy3499/overtime-notebook-app.git" gh-pages
+# 若环境里提供了 GH_TOKEN，则带上令牌推送；否则回退到无令牌地址（需本地已配好凭证）
+REMOTE="https://github.com/Jimmy3499/overtime-notebook-app.git"
+if [ -n "${GH_TOKEN:-}" ]; then
+  REMOTE="https://x-access-token:${GH_TOKEN}@github.com/Jimmy3499/overtime-notebook-app.git"
+fi
+export GIT_TERMINAL_PROMPT=0
+# 不禁用 credential helper：优先用 GH_TOKEN（若有），否则交给环境自带的凭据（沙箱 git-credential-helper）
+git push --force "$REMOTE" gh-pages
 
 echo ""
 echo "✅ 推送完成！"
