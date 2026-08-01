@@ -13,6 +13,25 @@ import {
 } from '../utils';
 import type { OvertimeType, RecordType, RecordInput } from '../types';
 
+// 网页端（react-native-web）不支持 @react-native-community/datetimepicker，
+// 该库在 web 上直接返回 null。改用原生 HTML <input type="time"/"date">，
+// 在 iPhone Safari 上正好表现为系统时间/日期选择器。仅 web 分支渲染，原生端不进入。
+const webInputBase: any = {
+  fontSize: 16,
+  paddingVertical: 8,
+  paddingHorizontal: 10,
+  borderRadius: 8,
+  borderWidth: 1,
+  borderColor: THEME.border,
+  borderStyle: 'solid',
+  backgroundColor: '#fff',
+  color: THEME.text,
+};
+const webInputStyleTime: any = { ...webInputBase, width: 120 };
+const webInputStyleDate: any = { ...webInputBase, flex: 1 };
+
+const WebInput = (props: any) => React.createElement('input', props);
+
 export default function AddRecordScreen() {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
@@ -235,11 +254,23 @@ export default function AddRecordScreen() {
         {/* 日期 */}
         <Text style={styles.sectionTitle}>日期</Text>
         <View style={styles.card}>
-          <TouchableOpacity style={styles.row} onPress={() => setShowDatePicker(true)}>
-            <Text style={styles.label}>日期</Text>
-            <Text style={styles.valueText}>{date}</Text>
-          </TouchableOpacity>
-          {showDatePicker && (
+          {Platform.OS === 'web' ? (
+            <View style={styles.row}>
+              <Text style={styles.label}>日期</Text>
+              <WebInput
+                type="date"
+                value={date}
+                onChange={(e: any) => setDate(e.target.value)}
+                style={webInputStyleDate}
+              />
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.row} onPress={() => setShowDatePicker(true)}>
+              <Text style={styles.label}>日期</Text>
+              <Text style={styles.valueText}>{date}</Text>
+            </TouchableOpacity>
+          )}
+          {Platform.OS !== 'web' && showDatePicker && (
             <DateTimePicker
               value={new Date(date + 'T00:00:00')}
               mode="date"
@@ -282,28 +313,46 @@ export default function AddRecordScreen() {
           <View style={styles.row}>
             <Text style={styles.label}>{isLate ? '应到时间' : isLeave ? '开始时间' : '开始时间'}</Text>
             <View style={styles.timeRow}>
-              <TouchableOpacity style={styles.timeBtn} onPress={() => setShowStartPicker(true)}>
-                <Text style={styles.timeText}>{normalOffTime}</Text>
-              </TouchableOpacity>
+              {Platform.OS === 'web' ? (
+                <WebInput
+                  type="time"
+                  value={normalOffTime}
+                  onChange={(e: any) => onStartTimeChange(e.target.value)}
+                  style={webInputStyleTime}
+                />
+              ) : (
+                <TouchableOpacity style={styles.timeBtn} onPress={() => setShowStartPicker(true)}>
+                  <Text style={styles.timeText}>{normalOffTime}</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity style={styles.nowBtn} onPress={() => setNow('start')}>
                 <Text style={styles.nowBtnText}>此刻</Text>
               </TouchableOpacity>
             </View>
           </View>
-          {renderTimePicker(showStartPicker, normalOffTime, onStartTimeChange, () => setShowStartPicker(false))}
+          {Platform.OS !== 'web' && renderTimePicker(showStartPicker, normalOffTime, onStartTimeChange, () => setShowStartPicker(false))}
 
           <View style={styles.row}>
             <Text style={styles.label}>{isLate ? '实到时间' : isLeave ? '结束时间' : '结束时间'}</Text>
             <View style={styles.timeRow}>
-              <TouchableOpacity style={styles.timeBtn} onPress={() => setShowEndPicker(true)}>
-                <Text style={styles.timeText}>{actualOffTime}</Text>
-              </TouchableOpacity>
+              {Platform.OS === 'web' ? (
+                <WebInput
+                  type="time"
+                  value={actualOffTime}
+                  onChange={(e: any) => onEndTimeChange(e.target.value)}
+                  style={webInputStyleTime}
+                />
+              ) : (
+                <TouchableOpacity style={styles.timeBtn} onPress={() => setShowEndPicker(true)}>
+                  <Text style={styles.timeText}>{actualOffTime}</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity style={styles.nowBtn} onPress={() => setNow('end')}>
                 <Text style={styles.nowBtnText}>此刻</Text>
               </TouchableOpacity>
             </View>
           </View>
-          {renderTimePicker(showEndPicker, actualOffTime, onEndTimeChange, () => setShowEndPicker(false))}
+          {Platform.OS !== 'web' && renderTimePicker(showEndPicker, actualOffTime, onEndTimeChange, () => setShowEndPicker(false))}
 
           {!isLate && (
             <View style={styles.switchRow}>
