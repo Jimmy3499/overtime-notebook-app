@@ -24,7 +24,7 @@ cd "$TMP"
 git init -q
 git checkout -b gh-pages
 git add -A
-git commit -q -m "deploy web v3.2.0 (PWA)"
+git commit -q -m "deploy web v3.2.1 (PWA)"
 
 echo "🚀 推送到 origin/gh-pages ..."
 # 若环境里提供了 GH_TOKEN，则带上令牌推送；否则回退到无令牌地址（需本地已配好凭证）

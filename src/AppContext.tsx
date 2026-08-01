@@ -224,8 +224,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const record: OvertimeRecord = {
       id: genId(),
       date: input.date,
-      normalOffTime: fields.startTime,
-      actualOffTime: fields.endTime,
+      normalOffTime: input.normalOffTime,
+      actualOffTime: input.actualOffTime,
       crossDay: input.crossDay,
       type: input.type,
       reason: input.reason,
@@ -253,8 +253,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const updated: OvertimeRecord = {
       ...existing,
       date: input.date,
-      normalOffTime: fields.startTime,
-      actualOffTime: fields.endTime,
+      normalOffTime: input.normalOffTime,
+      actualOffTime: input.actualOffTime,
       crossDay: input.crossDay,
       type: input.type,
       reason: input.reason,
@@ -298,8 +298,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const record: OvertimeRecord = {
       id: genId(),
       ...input,
-      normalOffTime: newRecord.startTime,
-      actualOffTime: newRecord.endTime,
+      normalOffTime: input.normalOffTime,
+      actualOffTime: input.actualOffTime,
       durationHours: newRecord.durationHours,
       pay: newRecord.pay,
       totalIncome: newRecord.totalIncome,

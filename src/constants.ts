@@ -43,7 +43,7 @@ export const RECORD_TYPE_INFO: Record<
 export const RECORD_TYPES: RecordType[] = ['overtime', 'leave', 'late'];
 
 // 当前版本号（设置页展示，便于核对下载的是哪个版本）
-export const APP_VERSION = '3.2.0';
+export const APP_VERSION = '3.2.1';
 
 // 默认设置
 export const DEFAULT_SETTINGS: Settings = {
@@ -65,8 +65,6 @@ export const DEFAULT_SETTINGS: Settings = {
   salaryMultiplierHoliday: 3,
   roundToHalfHour: true,
   roundDown: true,
-  overtimeRoundToHalfHour: true,   // 加班/请假起止时间按 0.5h 取整
-  overtimeRoundDown: false,        // false=向上取整(ceil)，true=向下取整(floor)
   defaultType: 'weekday',
   compOffEnabled: false,
   compOffRate: 1.0,

@@ -70,8 +70,6 @@ export interface Settings {
   salaryMultiplierHoliday: number;  // 月薪算时薪：节假日倍率
   roundToHalfHour: boolean;     // 是否按0.5小时取整
   roundDown: boolean;           // 取整方式：true向下取整，false向上取整
-  overtimeRoundToHalfHour: boolean; // 加班/请假起止时间是否按0.5小时取整
-  overtimeRoundDown: boolean;       // 起止时间取整方式：true向下取整(floor)，false向上取整(ceil)
   defaultType: OvertimeType;    // 默认加班类型
   compOffEnabled: boolean;      // 是否启用调休
   compOffRate: number;          // 调休倍率（1.0 = 1小时加班换1小时调休）
@@ -114,6 +112,4 @@ export interface CalcFields {
   totalIncome: number;     // 收入合计（工资 + 补贴）
   deduction: number;       // 扣款（元）；加班/请假=0
   netIncome: number;       // 净收入 = totalIncome - deduction
-  startTime: string;       // 实际参与计算的开始时间（可能已按0.5h取整）
-  endTime: string;         // 实际参与计算的结束时间（可能已按0.5h取整）
 }

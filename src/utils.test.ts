@@ -4,7 +4,6 @@ import {
   timeToMinutes,
   minutesToTime,
   roundToHalfHour,
-  roundTimeToHalfHour,
   calcRawDurationHours,
   calcEffectiveDuration,
   calcPay,
@@ -59,23 +58,6 @@ describe('roundToHalfHour 取整', () => {
     expect(roundToHalfHour(2.0, false)).toBe(2);
     expect(roundToHalfHour(2.1, false)).toBe(2.5);
     expect(roundToHalfHour(2.6, false)).toBe(3);
-  });
-});
-
-describe('roundTimeToHalfHour 时刻(HH:mm)取整', () => {
-  test('向上取整 ceil：非对齐时刻进位到最近 30 分钟', () => {
-    expect(roundTimeToHalfHour('08:25', false)).toBe('08:30');
-    expect(roundTimeToHalfHour('08:10', false)).toBe('08:30');
-    expect(roundTimeToHalfHour('23:45', false)).toBe('23:30'); // 封顶 23:30
-  });
-  test('向下取整 floor：非对齐时刻退位到最近 30 分钟', () => {
-    expect(roundTimeToHalfHour('08:25', true)).toBe('08:00');
-    expect(roundTimeToHalfHour('08:40', true)).toBe('08:30');
-    expect(roundTimeToHalfHour('00:00', true)).toBe('00:00'); // 封底 00:00
-  });
-  test('边界：已对齐时刻不改变', () => {
-    expect(roundTimeToHalfHour('18:00', false)).toBe('18:00');
-    expect(roundTimeToHalfHour('18:30', true)).toBe('18:30');
   });
 });
 
@@ -308,48 +290,6 @@ describe('calcRecordFields 统一计算入口', () => {
     expect(r.netIncome).toBe(0);
   });
 
-  test('加班：起止时间按 0.5h 向上取整（ceil）', () => {
-    const s = makeSettings({ overtimeRoundToHalfHour: true, overtimeRoundDown: false });
-    const r = calcRecordFields(
-      { ...overtimeInput, normalOffTime: '18:25', actualOffTime: '20:40' },
-      s,
-    );
-    expect(r.startTime).toBe('18:30');
-    expect(r.endTime).toBe('21:00');
-    expect(r.rawHours).toBe(2.5); // 18:30 → 21:00
-  });
-
-  test('加班：起止时间按 0.5h 向下取整（floor）', () => {
-    const s = makeSettings({ overtimeRoundToHalfHour: true, overtimeRoundDown: true });
-    const r = calcRecordFields(
-      { ...overtimeInput, normalOffTime: '18:25', actualOffTime: '20:40' },
-      s,
-    );
-    expect(r.startTime).toBe('18:00');
-    expect(r.endTime).toBe('20:30');
-    expect(r.rawHours).toBe(2.5); // 18:00 → 20:30
-  });
-
-  test('加班：关闭取整时直接使用原始起止时间', () => {
-    const s = makeSettings({ overtimeRoundToHalfHour: false });
-    const r = calcRecordFields(
-      { ...overtimeInput, normalOffTime: '18:25', actualOffTime: '20:40' },
-      s,
-    );
-    expect(r.startTime).toBe('18:25');
-    expect(r.endTime).toBe('20:40');
-    expect(r.rawHours).toBe(2 + 15 / 60);
-  });
-
-  test('起止时间取整仅作用于加班/请假，不影响迟到', () => {
-    const s = makeSettings({ overtimeRoundToHalfHour: true, overtimeRoundDown: false });
-    const r = calcRecordFields(
-      { ...overtimeInput, recordType: 'late', normalOffTime: '09:25', actualOffTime: '10:40' },
-      s,
-    );
-    expect(r.startTime).toBe('09:25'); // 迟到不取整
-    expect(r.endTime).toBe('10:40');
-  });
 });
 
 // ============ 日历多选汇总 calcSelectionSummary ============
