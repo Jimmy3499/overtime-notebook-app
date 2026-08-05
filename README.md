@@ -69,4 +69,4 @@ bash build-android.sh debug     # 构建 debug 包，产物: android/app/build/o
 - TypeScript
 - React Navigation
 - AsyncStorage
-- CC BY-NC 4.0 License（Copyright © 2026 Jimmy3499，仅供学习交流，禁止商业用途）
+
